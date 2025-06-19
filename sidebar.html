@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas Komputer Grafik</title>
+    <style>
+        /* CSS Dimulai di Sini */
+
+        /* General Body Styles */
+        body {
+            font-family: Arial, sans-serif; /* Mengatur jenis font dasar */
+            margin: 0; /* Menghilangkan margin default dari body */
+            padding: 0; /* Menghilangkan padding default dari body */
+            display: flex; /* Menggunakan Flexbox untuk tata letak utama */
+            flex-direction: column; /* Mengatur arah Flexbox secara vertikal */
+            min-height: 100vh; /* Memastikan body mengisi seluruh tinggi viewport */
+            background-color: #f4f7f6; /* Warna latar belakang body */
+            overflow-x: hidden; /* Mencegah scroll horizontal saat sidebar terbuka */
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #2c3e50; /* Warna latar belakang header */
+            color: #ecf0f1; /* Warna teks header */
+            padding: 15px 20px; /* Padding di dalam header */
+            display: flex; /* Menggunakan Flexbox untuk item di dalam header */
+            align-items: center; /* Menyelaraskan item secara vertikal di tengah */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Efek bayangan di bawah header */
+            position: sticky; /* Membuat header tetap di bagian atas saat di-scroll */
+            top: 0; /* Menempelkan header ke bagian atas */
+            z-index: 1000; /* Memastikan header berada di atas elemen lain */
+        }
+
+        header h1 {
+            margin: 0; /* Menghilangkan margin default pada judul */
+            font-size: 1.5em; /* Ukuran font judul */
+            flex-grow: 1; /* Memungkinkan judul mengambil semua ruang yang tersedia */
+            text-align: center; /* Mengatur teks judul ke tengah */
+        }
+
+        /* Hamburger Menu Button */
+        .hamburger-menu {
+            background: none; /* Menghilangkan latar belakang tombol */
+            border: none; /* Menghilangkan border tombol */
+            cursor: pointer; /* Mengubah kursor menjadi pointer saat dihover */
+            display: flex; /* Menggunakan Flexbox untuk bar hamburger */
+            flex-direction: column; /* Mengatur bar secara vertikal */
+            justify-content: space-around; /* Mendistribusikan ruang di antara bar */
+            width: 30px; /* Lebar tombol hamburger */
+            height: 25px; /* Tinggi tombol hamburger */
+            position: absolute; /* Memposisikan tombol secara absolut */
+            left: 20px; /* Jarak dari kiri header */
+        }
+
+        .hamburger-menu .bar {
+            display: block; /* Menjadikan setiap bar sebagai blok */
+            width: 100%; /* Lebar bar mengisi tombol */
+            height: 3px; /* Tinggi bar */
+            background-color: #ecf0f1; /* Warna bar */
+            border-radius: 5px; /* Sudut membulat pada bar */
+            transition: all 0.3s ease-in-out; /* Animasi transisi untuk perubahan properti */
+        }
+
+        /* Animasi untuk hamburger menjadi silang (X) */
+        .hamburger-menu.active .bar:nth-child(1) {
+            transform: translateY(8px) rotate(45deg); /* Menggeser dan memutar bar pertama */
+        }
+
+        .hamburger-menu.active .bar:nth-child(2) {
+            opacity: 0; /* Menghilangkan bar kedua */
+        }
+
+        .hamburger-menu.active .bar:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg); /* Menggeser dan memutar bar ketiga */
+        }
+
+        /* Container untuk Sidebar dan Konten */
+        .container {
+            display: flex; /* Menggunakan Flexbox untuk sidebar dan konten */
+            flex: 1; /* Memungkinkan container mengambil sisa tinggi yang tersedia */
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px; /* Lebar sidebar */
+            background-color: #34495e; /* Warna latar belakang sidebar */
+            color: #ecf0f1; /* Warna teks sidebar */
+            padding-top: 20px; /* Padding di bagian atas sidebar */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* Efek bayangan di sisi kanan sidebar */
+            transform: translateX(-250px); /* Menyembunyikan sidebar di luar layar secara default */
+            transition: transform 0.3s ease-in-out; /* Animasi transisi untuk muncul/sembunyi sidebar */
+            position: fixed; /* Memposisikan sidebar secara tetap */
+            height: 100%; /* Tinggi sidebar mengisi seluruh viewport */
+            top: 0; /* Menempelkan sidebar ke bagian atas */
+            left: 0; /* Menempelkan sidebar ke sisi kiri */
+            z-index: 999; /* Memastikan sidebar di atas konten tapi di bawah header */
+            overflow-y: auto; /* Mengaktifkan scroll vertikal jika konten sidebar terlalu panjang */
+        }
+
+        .sidebar.active {
+            transform: translateX(0); /* Menampilkan sidebar dengan menggesernya ke posisi nol */
+        }
+
+        .sidebar ul {
+            list-style: none; /* Menghilangkan bullet point default pada daftar */
+            padding: 0; /* Menghilangkan padding default pada daftar */
+            margin: 0; /* Menghilangkan margin default pada daftar */
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px; /* Jarak antar item daftar */
+        }
+
+        .sidebar ul li a {
+            display: block; /* Menjadikan link sebagai blok agar padding bisa diterapkan */
+            padding: 12px 20px; /* Padding di dalam link */
+            color: #ecf0f1; /* Warna teks link */
+            text-decoration: none; /* Menghilangkan garis bawah pada link */
+            transition: background-color 0.2s ease; /* Animasi perubahan warna latar belakang */
+            border-left: 5px solid transparent; /* Border kiri transparan sebagai indikator aktif */
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #4a627a; /* Warna latar belakang saat link di-hover */
+        }
+
+        .sidebar ul li a.active {
+            background-color: #1abc9c; /* Warna latar belakang saat link aktif */
+            border-left-color: #ecf0f1; /* Warna border kiri saat link aktif */
+            font-weight: bold; /* Membuat teks link aktif menjadi tebal */
+        }
+
+        /* Main Content Styles */
+        .content {
+            flex-grow: 1; /* Memungkinkan konten mengambil semua ruang yang tersisa */
+            padding: 20px; /* Padding di dalam area konten */
+            margin-left: 0; /* Tanpa margin saat sidebar tertutup (untuk mobile) */
+            transition: margin-left 0.3s ease-in-out; /* Animasi transisi untuk margin-left */
+            background-color: #fcfcfc; /* Warna latar belakang konten */
+            box-sizing: border-box; /* Memastikan padding termasuk dalam total lebar/tinggi elemen */
+            overflow: hidden; /* Menyembunyikan overflow dari iframe */
+        }
+
+        /* Dorong konten saat sidebar terbuka di layar yang lebih besar */
+        body.sidebar-open .content {
+            margin-left: 250px; /* Mendorong konten ke kanan sebesar lebar sidebar */
+        }
+
+        /* iFrame Styles */
+        #mainFrame {
+            width: 100%; /* Lebar iframe mengisi penuh parent */
+            height: 100%; /* Tinggi iframe disesuaikan dengan tinggi viewport dikurangi tinggi header dan padding */
+            border: 1px solid #ddd; /* Border di sekeliling iframe */
+            border-radius: 8px; /* Sudut membulat pada iframe */
+            background-color: white; /* Warna latar belakang iframe */
+        }
+
+        /* Overlay untuk saat sidebar terbuka di layar kecil */
+        .overlay {
+            position: fixed; /* Memposisikan overlay secara tetap */
+            top: 0; /* Menempelkan overlay ke bagian atas */
+            left: 0; /* Menempelkan overlay ke sisi kiri */
+            width: 100%; /* Lebar overlay mengisi seluruh viewport */
+            height: 100%; /* Tinggi overlay mengisi seluruh viewport */
+            background-color: rgba(0, 0, 0, 0.5); /* Warna latar belakang transparan */
+            z-index: 998; /* Di bawah sidebar, di atas konten */
+            opacity: 0; /* Awalnya tidak terlihat */
+            visibility: hidden; /* Awalnya tidak dapat diinteraksi */
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; /* Animasi transisi */
+        }
+
+        .overlay.active {
+            opacity: 1; /* Membuat overlay terlihat */
+            visibility: visible; /* Membuat overlay dapat diinteraksi */
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .hamburger-menu {
+                display: none; /* Menyembunyikan hamburger di layar yang lebih besar */
+            }
+
+            .sidebar {
+                transform: translateX(0); /* Selalu menampilkan sidebar di layar yang lebih besar */
+                position: relative; /* Mengubah posisi menjadi relatif */
+                height: auto; /* Mengatur tinggi secara otomatis */
+                box-shadow: none; /* Menghilangkan bayangan sidebar */
+            }
+
+            .content {
+                margin-left: 0; /* Tidak perlu dorongan, karena sidebar adalah bagian dari tata letak flex */
+                flex-grow: 1; /* Memungkinkan konten mengambil semua ruang yang tersedia */
+            }
+
+            body.sidebar-open .content {
+                margin-left: 0; /* Mengatur ulang margin-left untuk layar yang lebih besar */
+            }
+
+            header h1 {
+                text-align: left; /* Menyelaraskan judul ke kiri di layar yang lebih besar */
+                margin-left: 0; /* Menghilangkan margin kiri judul */
+            }
+        }
+        /* CSS Berakhir di Sini */
+    </style>
+</head>
+<body>
+    <header>
+        <button class="hamburger-menu" id="hamburgerMenu">
+            <span class="bar"></span> <span class="bar"></span> <span class="bar"></span> </button>
+        <h1>Tugas Akhir Komputer Grafik</h1> </header>
+
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#" data-src="index.html">Home</a></li>
+                    <li><a href="#" data-src="pertemuan2.html">pertemuan 2: Pixel, RGB dan HSV</a></li>
+                    <li><a href="#" data-src="pertemuan3.html">pertemuan 3: Garis dan poligon</a></li>
+                    <li><a href="#" data-src="pertemuan4.html">pertemuan 4: Lingkaran dan Elips</a></li>
+                    <li><a href="#" data-src="pertemuan5.html">pertemuan 5: Pembuatan Kurva Bezier</a></li>
+                    <li><a href="#" data-src="pertemuan6.html">pertemuan 6: Algoritma Pewarnaan Bidang</a></li>
+                    <li><a href="#" data-src="pertemuan7.html">pertemuan 7: Algoritma Proyeksi Geometri Bidang</a></li>
+                    <li><a href="#" data-src="pertemuan8.html">pertemuan 8: Algoritma Transformasi (Translasi & Rotasi)</a></li>
+                    <li><a href="#" data-src="pertemuan9.html">pertemuan 9: Algoritma Dilatasi Geometri</a></li>
+                    <li><a href="#" data-src="pertemuan10.html">pertemuan 10: Algoritma Viewing dan Clipping</a></li>
+                    <li><a href="#" data-src="pertemuan11.html">pertemuan 11: Algoritma Anti-Aliasing</a></li>
+                    <li><a href="#" data-src="pertemuan12.html">pertemuan 12: Algoritma Grafika 3D Sederhana</a></li>
+                    <li><a href="#" data-src="pertemuan13.html">pertemuan 13: Algoritma Pengolahan Citra Digital</a></li>
+                    <li><a href="#" data-src="pertemuan14.html">pertemuan 14: Aplikasi Grafika Komputer Sederhana</a></li>
+                    <li><a href="#" data-src="dashboard_tugas.html">Dashboard Tugas</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <iframe id="mainFrame" src="index.html" frameborder="0"></iframe>
+        </main>
+    </div>
+    <script>
+        /* JavaScript Dimulai di Sini */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ini adalah event listener yang menunggu hingga seluruh konten HTML telah dimuat dan di-parse
+            // sebelum menjalankan fungsi di dalamnya. Ini memastikan bahwa semua elemen yang direferensikan dalam script sudah ada di DOM.
+
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            // Mendapatkan referensi ke tombol hamburger berdasarkan ID 'hamburgerMenu'
+
+            const sidebar = document.getElementById('sidebar');
+            // Mendapatkan referensi ke elemen sidebar berdasarkan ID 'sidebar'
+
+            const mainFrame = document.getElementById('mainFrame');
+            // Mendapatkan referensi ke elemen iframe berdasarkan ID 'mainFrame'
+
+            const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
+            // Memilih semua elemen <a> (link) yang berada di dalam <li>, yang berada di dalam <ul>,
+            // yang berada di dalam elemen dengan kelas 'sidebar'. Hasilnya adalah NodeList (mirip array) dari semua link tersebut.
+
+            const body = document.body;
+            // Mendapatkan referensi ke elemen <body>
+
+            let overlay = document.createElement('div');
+            // Membuat elemen <div> baru secara dinamis untuk overlay
+
+            overlay.classList.add('overlay');
+            // Menambahkan kelas CSS 'overlay' ke elemen div yang baru dibuat
+
+            document.body.appendChild(overlay);
+            // Menambahkan elemen overlay ke dalam body HTML
+
+            // --- Fungsionalitas Hamburger Menu ---
+            hamburgerMenu.addEventListener('click', function() {
+                // Menambahkan event listener 'click' ke tombol hamburger
+
+                sidebar.classList.toggle('active');
+                // Mengalihkan (menambah/menghapus) kelas 'active' pada sidebar.
+                // Jika 'active' ada, akan dihapus; jika tidak ada, akan ditambahkan.
+                // Ini akan memicu CSS untuk menampilkan/menyembunyikan sidebar.
+
+                hamburgerMenu.classList.toggle('active');
+                // Mengalihkan kelas 'active' pada tombol hamburger untuk animasinya (mengubahnya menjadi 'X').
+
+                body.classList.toggle('sidebar-open');
+                // Mengalihkan kelas 'sidebar-open' pada body. Digunakan oleh CSS untuk mendorong konten utama.
+
+                overlay.classList.toggle('active');
+                // Mengalihkan kelas 'active' pada overlay untuk menampilkan/menyembunyikannya.
+            });
+
+            // --- Menutup Sidebar Saat Mengklik Overlay (khusus mobile) ---
+            overlay.addEventListener('click', function() {
+                // Menambahkan event listener 'click' ke overlay
+
+                if (sidebar.classList.contains('active')) {
+                    // Memeriksa apakah sidebar sedang dalam keadaan aktif (terbuka)
+
+                    sidebar.classList.remove('active');
+                    // Menghapus kelas 'active' dari sidebar (menutupnya)
+
+                    hamburgerMenu.classList.remove('active');
+                    // Menghapus kelas 'active' dari tombol hamburger (mengembalikan ikon semula)
+
+                    body.classList.remove('sidebar-open');
+                    // Menghapus kelas 'sidebar-open' dari body (mengembalikan posisi konten utama)
+
+                    overlay.classList.remove('active');
+                    // Menghapus kelas 'active' dari overlay (menyembunyikan overlay)
+                }
+            });
+
+            // --- Handler Klik Link Sidebar ---
+            sidebarLinks.forEach(link => {
+                // Melakukan iterasi (perulangan) untuk setiap link yang ditemukan di 'sidebarLinks'
+
+                link.addEventListener('click', function(event) {
+                    // Menambahkan event listener 'click' untuk setiap link sidebar
+
+                    event.preventDefault(); // Mencegah perilaku default link (navigasi langsung ke href)
+                    // Ini penting agar kita bisa memuat konten ke iframe secara manual.
+
+                    // Hapus kelas 'active' dari semua link
+                    sidebarLinks.forEach(item => item.classList.remove('active'));
+                    // Loop ini mengiterasi semua link lagi untuk memastikan hanya satu link yang aktif.
+
+                    // Tambahkan kelas 'active' ke link yang diklik
+                    this.classList.add('active');
+                    // 'this' mengacu pada elemen link yang saat ini diklik.
+
+                    // Muat konten ke dalam iframe
+                    const src = this.getAttribute('data-src');
+                    // Mengambil nilai dari atribut 'data-src' dari link yang diklik.
+                    // Atribut ini berisi URL ke halaman konten tugas.
+
+                    mainFrame.src = src;
+                    // Mengatur atribut 'src' dari iframe ('mainFrame') ke URL yang diambil.
+                    // Ini akan memuat dan menampilkan konten dari URL tersebut di dalam iframe.
+
+                    // Tutup sidebar di layar kecil setelah mengklik link
+                    if (window.innerWidth < 768) { // Periksa lebar viewport. 768px adalah breakpoint yang umum.
+                        sidebar.classList.remove('active');
+                        // Menutup sidebar
+
+                        hamburgerMenu.classList.remove('active');
+                        // Mengembalikan ikon hamburger
+
+                        body.classList.remove('sidebar-open');
+                        // Mengembalikan posisi konten utama
+
+                        overlay.classList.remove('active');
+                        // Menyembunyikan overlay
+                    }
+                });
+            });
+
+            // --- Tangani Link Aktif Awal Berdasarkan Konten Iframe (Opsional) ---
+            // Bagian ini memastikan bahwa jika Anda me-refresh halaman atau memulai dengan src iframe yang sudah ditentukan,
+            // link sidebar yang sesuai akan tetap aktif.
+            mainFrame.addEventListener('load', function() {
+                // Menambahkan event listener 'load' ke iframe. Akan dieksekusi saat iframe selesai memuat konten.
+
+                const currentSrc = mainFrame.src;
+                // Mengambil URL konten yang sedang dimuat di iframe.
+
+                sidebarLinks.forEach(link => {
+                    // Melakukan iterasi lagi pada semua link sidebar.
+
+                    const linkSrc = link.getAttribute('data-src');
+                    // Mengambil nilai 'data-src' dari setiap link sidebar.
+
+                    // Periksa apakah 'data-src' link cocok dengan URL iframe saat ini
+                    if (currentSrc.includes(linkSrc)) {
+                        // Menggunakan includes() untuk mencocokkan sebagian URL (misal: "tugas1.html" dalam "http://localhost/tugas1.html")
+
+                        sidebarLinks.forEach(item => item.classList.remove('active'));
+                        // Hapus semua kelas 'active' terlebih dahulu
+
+                        link.classList.add('active');
+                        // Tambahkan kelas 'active' ke link yang cocok
+                    }
+                });
+            });
+
+            // --- Otomatis Pilih Link Pertama Saat Pemuatan Awal (Opsional) ---
+            // Ini akan membuat link pertama aktif secara default saat halaman dimuat pertama kali.
+            if (sidebarLinks.length > 0 && mainFrame.src.endsWith('welcome.html')) {
+                // Memastikan ada link di sidebar DAN iframe sedang menampilkan 'welcome.html' (halaman awal default)
+
+                sidebarLinks[0].classList.add('active');
+                // Menambahkan kelas 'active' ke link sidebar pertama
+            }
+
+        });
+        /* JavaScript Berakhir di Sini */
+    </script>
+</body>
+</html>

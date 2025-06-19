@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Algoritma Garis Bresenham & Poligon Interaktif</title>
+    <style>
+        /* Gaya dasar untuk body, mengatur font dan padding */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4; /* Warna latar belakang body */
+            color: #333; /* Warna teks utama */
+        }
+        /* Gaya untuk elemen input number */
+        input[type="number"] {
+            width: 70px; /* Lebar input */
+            margin: 5px; /* Margin di sekitar input */
+            padding: 8px; /* Padding di dalam input */
+            border: 1px solid #ccc; /* Border input */
+            border-radius: 4px; /* Sudut membulat */
+            box-sizing: border-box; /* Memastikan padding dan border termasuk dalam lebar */
+        }
+        /* Gaya untuk elemen canvas */
+        canvas {
+            border: 2px solid #000; /* Border canvas */
+            margin-top: 20px; /* Margin atas canvas */
+            background-color: #fff; /* Latar belakang canvas putih */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Bayangan untuk canvas */
+        }
+        /* Gaya untuk grup input */
+        .input-group {
+            margin-bottom: 20px; /* Margin bawah grup input */
+            padding: 15px; /* Padding di dalam grup input */
+            background: #e9e9e9; /* Warna latar belakang grup input */
+            border-radius: 8px; /* Sudut membulat */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan */
+        }
+        .input-group label {
+            display: inline-block; /* Membuat label sejajar dengan input */
+            margin-right: 15px; /* Margin kanan label */
+            margin-bottom: 10px; /* Margin bawah untuk baris label */
+            font-weight: bold; /* Teks label tebal */
+        }
+        /* Gaya untuk tombol */
+        button {
+            padding: 10px 20px; /* Padding tombol */
+            background-color: #007bff; /* Warna latar tombol */
+            color: white; /* Warna teks tombol */
+            border: none; /* Tanpa border */
+            border-radius: 5px; /* Sudut membulat */
+            cursor: pointer; /* Kursor pointer saat hover */
+            font-size: 16px; /* Ukuran font tombol */
+            transition: background-color 0.3s ease; /* Transisi halus saat hover */
+            margin-left: 10px; /* Jarak kiri untuk tombol */
+        }
+        button:hover {
+            background-color: #0056b3; /* Warna latar tombol saat hover */
+        }
+        /* Gaya untuk bagian output dan penjelasan */
+        .output, .penjelasan-bawah {
+            margin-top: 25px; /* Margin atas */
+            background: #ffffff; /* Latar belakang putih */
+            padding: 20px; /* Padding */
+            border: 1px solid #ddd; /* Border */
+            border-radius: 8px; /* Sudut membulat */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan */
+        }
+        .penjelasan-bawah {
+            background: #e0f7fa; /* Warna latar belakang penjelasan berbeda */
+            border-color: #b2ebf2; /* Warna border berbeda */
+        }
+        /* Gaya untuk tabel */
+        table {
+            border-collapse: collapse; /* Menggabungkan border sel */
+            width: 100%; /* Lebar tabel 100% */
+            margin-top: 20px; /* Margin atas tabel */
+        }
+        table, th, td {
+            border: 1px solid #c0c0c0; /* Border sel dan tabel */
+        }
+        th, td {
+            padding: 10px; /* Padding sel */
+            text-align: center; /* Teks rata tengah */
+        }
+        th {
+            background-color: #f2f2f2; /* Latar belakang header tabel */
+            font-weight: bold; /* Teks header tebal */
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Warna latar sel genap */
+        }
+        pre {
+            background-color: #eee; /* Latar belakang untuk blok kode */
+            padding: 10px; /* Padding untuk blok kode */
+            border-radius: 4px; /* Sudut membulat */
+            overflow-x: auto; /* Scroll horizontal jika konten terlalu lebar */
+        }
+        ul {
+            list-style-type: disc; /* Jenis bullet point */
+            margin-left: 20px; /* Indentasi daftar */
+        }
+        .section-header {
+            margin-top: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .polygon-input-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 0 auto;">
+        <h1>Grafika Komputer: Garis dan Poligon</h1>
+
+        <h2 class="section-header">Algoritma Garis Bresenham</h2>
+
+        <div class="input-group">
+            <label>Titik A (X1, Y1):
+                <input type="number" id="line_x1" value="40" oninput="gambarGarisBresenham()">
+                <input type="number" id="line_y1" value="30" oninput="gambarGarisBresenham()">
+            </label><br>
+            <label>Titik B (X2, Y2):
+                <input type="number" id="line_x2" value="100" oninput="gambarGarisBresenham()">
+                <input type="number" id="line_y2" value="60" oninput="gambarGarisBresenham()">
+            </label>
+            <button onclick="gambarGarisBresenham()">Gambar Garis</button>
+        </div>
+
+        <canvas id="bresenhamCanvas" width="600" height="400"></canvas>
+
+        <div class="output">
+            <strong>Titik-titik piksel yang digambar (Bresenham):</strong>
+            <table id="tabelPikselBresenham">
+                <thead>
+                    <tr><th>Iterasi</th><th>X</th><th>Y</th></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <h3>Penjelasan Algoritma Bresenham</h3>
+            <p>Algoritma Bresenham, yang dicetuskan pada tahun 1965 oleh J.E. Bresenham, adalah algoritma yang efisien untuk menggambar garis lurus pada raster graphics. Kelebihan utamanya adalah tidak memerlukan operasi floating-point (bilangan pecahan) yang intensif, melainkan hanya menggunakan operasi integer sederhana dan sistem incremental. Ini menjadikannya sangat cepat dan cocok untuk implementasi hardware.</p>
+
+            <h4>Langkah-langkah Algoritma Bresenham (Adaptasi Umum untuk Semua Oktan):</h4>
+            <ol>
+                <li>Tentukan titik awal (x_0, y_0) dan titik akhir (x_1, y_1) garis.</li>
+                <li>Hitung \Delta x = |x_1 - x_0| dan \Delta y = |y_1 - y_0|.</li>
+                <li>Tentukan arah inkremen untuk x (sx) dan y (sy). sx = 1 jika x_1 > x_0, sx = -1 jika x_1 < x_0, dan sy serupa untuk y.</li>
+                <li>Inisialisasi variabel `err` sebagai \Delta x - \Delta y. Ini adalah parameter keputusan awal.</li>
+                <li>Mulai dari (x, y) = (x_0, y_0), ulangi langkah berikut hingga garis digambar:
+                    <ul>
+                        <li>Gambar piksel (x, y).</li>
+                        <li>Hitung `e2 = 2 * err`.</li>
+                        <li>Jika `e2 > -dy`, maka `err -= dy` dan x += sx. (Pindah ke samping)</li>
+                        <li>Jika `e2 < dx`, maka `err += dx` dan y += sy. (Pindah ke atas/bawah)</li>
+                        <li>Jika x = x_1 dan y = y_1 (titik akhir tercapai), hentikan.</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>Algoritma ini secara efektif memilih piksel terdekat berdasarkan error akumulatif, memastikan jalur garis terlihat mulus tanpa celah.</p>
+        </div>
+
+        <h2 class="section-header">Penggambaran Poligon Sederhana & Scan Line Fill</h2>
+
+        <div class="input-group">
+            <p>Masukkan koordinat verteks poligon (X, Y). Klik "Tambah Titik" untuk setiap verteks. Minimal 3 titik.</p>
+            <div id="polygon_points_container">
+                <div class="polygon-input-item">
+                    <label>Titik 1: <input type="number" class="poly_x" value="100"> <input type="number" class="poly_y" value="100"></label>
+                </div>
+                 <div class="polygon-input-item">
+                    <label>Titik 2: <input type="number" class="poly_x" value="200"> <input type="number" class="poly_y" value="50"></label>
+                </div>
+                 <div class="polygon-input-item">
+                    <label>Titik 3: <input type="number" class="poly_x" value="300"> <input type="number" class="poly_y" value="100"></label>
+                </div>
+                 <div class="polygon-input-item">
+                    <label>Titik 4: <input type="number" class="poly_x" value="250"> <input type="number" class="poly_y" value="200"></label>
+                </div>
+                 <div class="polygon-input-item">
+                    <label>Titik 5: <input type="number" class="poly_x" value="150"> <input type="number" class="poly_y" value="200"></label>
+                </div>
+            </div>
+            <button onclick="addPolygonPoint()">Tambah Titik</button>
+            <button onclick="removePolygonPoint()">Hapus Titik Terakhir</button>
+            <button onclick="gambarPoligon()">Gambar Poligon & Isi</button>
+        </div>
+
+        <canvas id="polygonCanvas" width="600" height="400"></canvas>
+
+        <div class="penjelasan-bawah">
+            <h3>Penjelasan Poligon & Scan Line Fill Algorithm</h3>
+            <p>Poligon adalah gabungan dari beberapa garis lurus (disebut <strong>edge</strong>) yang masing-masing terhubung membentuk suatu luasan. Titik pertemuan dua sisi garis disebut <strong>verteks</strong>. Poligon dapat berupa sederhana (tidak ada sisi yang berpotongan dan tidak memiliki "lubang") atau tidak sederhana.</p>
+            <p>Secara umum, poligon juga dibedakan menjadi <strong>convex</strong> (semua sudut interior kurang dari 180 derajat) dan <strong>non-convex</strong>. Pengisian warna pada poligon dikenal dengan teknik <strong>area filling</strong> atau <strong>filling poligon</strong>. Salah satu metode yang umum adalah <strong>Scan Line Polygon Fill Algorithm</strong>.</p>
+
+            <h4>Scan Line Polygon Fill Algorithm:</h4>
+            <p>Metode ini mengisi warna pada poligon dengan melakukan "scan" horizontal dari kiri ke kanan. Prosesnya melibatkan:</p>
+            <ol>
+                <li>Mencari semua titik potong antara garis scan (garis horizontal pada setiap nilai Y dari Ymin hingga Ymax poligon) dengan setiap sisi poligon.</li>
+                <li>Mengurutkan titik-titik potong tersebut berdasarkan koordinat X.</li>
+                <li>Memberi warna pada piksel-piksel yang berada di antara setiap pasangan titik potong (misalnya, antara X1 dan X2, X3 dan X4, dst.).</li>
+                <li>Untuk mengatasi ambiguitas (misalnya, piksel yang berada tepat di verteks atau tepi horizontal), digunakan aturan paritas ganjil-genap (odd-even rule). Sebuah piksel diwarnai jika jumlah perpotongan garis scan dari piksel tersebut ke salah satu arah (misalnya ke kanan) adalah ganjil.</li>
+            </ol>
+            <p>Algoritma ini efektif tetapi memerlukan biaya komputasi yang besar karena setiap sisi poligon perlu diuji terhadap setiap garis scan. Konsep seperti Edge Table (ET) dan Active Edge Table (AET) digunakan untuk mengoptimalkan proses ini.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Bagian Umum untuk Canvas ---
+        /**
+         * Fungsi untuk menggambar satu piksel pada canvas.
+         * @param {CanvasRenderingContext2D} ctx Konteks gambar 2D dari canvas.
+         * @param {number} x Koordinat x piksel.
+         * @param {number} y Koordinat y piksel.
+         * @param {string} color Warna piksel (default 'black').
+         */
+        function drawPixel(ctx, x, y, color = 'black') {
+            ctx.fillStyle = color; // Atur warna piksel
+            ctx.fillRect(x, y, 1, 1); // Menggambar persegi 1x1 piksel
+        }
+
+        // --- Bagian Algoritma Garis Bresenham ---
+        /**
+         * Mengimplementasikan Algoritma Bresenham untuk menggambar garis
+         * antara titik (x0, y0) dan (x1, y1) pada canvas yang diberikan.
+         * Ini adalah implementasi yang menangani semua oktan.
+         * @param {CanvasRenderingContext2D} ctx Konteks gambar 2D dari canvas.
+         * @param {number} x0 Koordinat X titik awal.
+         * @param {number} y0 Koordinat Y titik awal.
+         * @param {number} x1 Koordinat X titik akhir.
+         * @param {number} y1 Koordinat Y titik akhir.
+         * @param {HTMLTableSectionElement} tbodyElemen Elemen <tbody> tabel untuk hasil.
+         */
+        function bresenhamLine(ctx, x0, y0, x1, y1, tbodyElemen) {
+            let dx = Math.abs(x1 - x0); // Selisih absolut pada sumbu X
+            let dy = Math.abs(y1 - y0); // Selisih absolut pada sumbu Y
+            let sx = (x0 < x1) ? 1 : -1; // Arah langkah X (1 jika x bertambah, -1 jika berkurang)
+            let sy = (y0 < y1) ? 1 : -1; // Arah langkah Y (1 jika y bertambah, -1 jika berkurang)
+            let err = dx - dy; // Parameter keputusan awal
+
+            let currentX = x0; // Koordinat X piksel yang sedang digambar
+            let currentY = y0; // Koordinat Y piksel yang sedang digambar
+            let iterasi = 0; // Penghitung iterasi untuk tabel
+
+            // Loop utama algoritma Bresenham
+            while (true) {
+                drawPixel(ctx, currentX, currentY, 'blue'); // Gambar piksel saat ini
+
+                // Tambahkan piksel ke tabel hasil
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${iterasi}</td><td>${currentX}</td><td>${currentY}</td>`;
+                tbodyElemen.appendChild(row);
+
+                // Periksa apakah titik akhir sudah tercapai
+                if (currentX === x1 && currentY === y1) {
+                    break; // Hentikan loop jika titik akhir sudah digambar
+                }
+
+                let e2 = 2 * err; // Hitung 2 kali parameter error
+
+                // Perbarui parameter error dan koordinat berdasarkan e2
+                if (e2 > -dy) {
+                    err -= dy; // Kurangi error dengan dy
+                    currentX += sx; // Pindahkan ke arah X
+                }
+                if (e2 < dx) {
+                    err += dx; // Tambah error dengan dx
+                    currentY += sy; // Pindahkan ke arah Y
+                }
+                iterasi++; // Naikkan penghitung iterasi
+            }
+        }
+
+        /**
+         * Fungsi yang dipanggil dari HTML untuk menggambar garis Bresenham.
+         * Mengambil input, membersihkan canvas, dan memanggil bresenhamLine.
+         */
+        function gambarGarisBresenham() {
+            const canvas = document.getElementById("bresenhamCanvas");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan canvas
+
+            // Mendapatkan nilai titik dari input
+            const x1 = parseInt(document.getElementById("line_x1").value);
+            const y1 = parseInt(document.getElementById("line_y1").value);
+            const x2 = parseInt(document.getElementById("line_x2").value);
+            const y2 = parseInt(document.getElementById("line_y2").value);
+
+            const tbody = document.querySelector("#tabelPikselBresenham tbody");
+            tbody.innerHTML = ""; // Bersihkan tabel hasil
+
+            // Validasi input sederhana
+            if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+                alert("Masukkan semua koordinat titik untuk garis.");
+                return;
+            }
+
+            // Panggil fungsi Bresenham untuk menggambar garis
+            bresenhamLine(ctx, x1, y1, x2, y2, tbody);
+
+            // Gambar titik awal dan akhir garis untuk penanda
+            ctx.fillStyle = 'red'; // Warna untuk titik awal/akhir
+            ctx.beginPath();
+            ctx.arc(x1, y1, 3, 0, 2 * Math.PI); // Lingkaran kecil di titik awal
+            ctx.fill();
+            ctx.fillText(`(${x1},${y1})`, x1 + 5, y1 - 5); // Label titik awal
+
+            ctx.beginPath();
+            ctx.arc(x2, y2, 3, 0, 2 * Math.PI); // Lingkaran kecil di titik akhir
+            ctx.fill();
+            ctx.fillText(`(${x2},${y2})`, x2 + 5, y2 - 5); // Label titik akhir
+        }
+
+
+        // --- Bagian Algoritma Poligon dan Scan Line Fill ---
+        let polygonPointCount = 5; // Jumlah awal titik poligon
+
+        /**
+         * Menambah satu pasang input X,Y untuk titik poligon baru.
+         */
+        function addPolygonPoint() {
+            polygonPointCount++; // Tambah hitungan titik
+            const container = document.getElementById("polygon_points_container");
+            const div = document.createElement("div"); // Buat div baru untuk input
+            div.classList.add("polygon-input-item"); // Tambahkan class styling
+            div.innerHTML = `<label>Titik ${polygonPointCount}: <input type="number" class="poly_x" value=""> <input type="number" class="poly_y" value=""></label>`;
+            container.appendChild(div); // Tambahkan div ke container
+        }
+
+        /**
+         * Menghapus pasang input X,Y terakhir untuk titik poligon.
+         */
+        function removePolygonPoint() {
+            const container = document.getElementById("polygon_points_container");
+            if (polygonPointCount > 3) { // Pastikan minimal ada 3 titik
+                container.removeChild(container.lastElementChild); // Hapus elemen terakhir
+                polygonPointCount--; // Kurangi hitungan titik
+            } else {
+                alert("Minimal 3 titik untuk membentuk poligon.");
+            }
+        }
+
+        /**
+         * Menggambar poligon dan mengaplikasikan algoritma Scan Line Fill.
+         */
+        function gambarPoligon() {
+            const canvas = document.getElementById("polygonCanvas");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan canvas
+
+            const polyXInputs = document.querySelectorAll("#polygon_points_container .poly_x"); // Ambil semua input X
+            const polyYInputs = document.querySelectorAll("#polygon_points_container .poly_y"); // Ambil semua input Y
+
+            let vertices = []; // Array untuk menyimpan verteks poligon
+            for (let i = 0; i < polyXInputs.length; i++) {
+                const x = parseInt(polyXInputs[i].value); // Ambil nilai X
+                const y = parseInt(polyYInputs[i].value); // Ambil nilai Y
+                if (isNaN(x) || isNaN(y)) {
+                    alert("Pastikan semua koordinat poligon terisi dengan angka.");
+                    return;
+                }
+                vertices.push({ x: x, y: y }); // Tambahkan verteks ke array
+            }
+
+            if (vertices.length < 3) {
+                alert("Poligon membutuhkan setidaknya 3 titik.");
+                return;
+            }
+
+            // --- Gambar Garis Batas Poligon (menggunakan Bresenham) ---
+            ctx.strokeStyle = 'black'; // Warna garis batas poligon
+            for (let i = 0; i < vertices.length; i++) {
+                const p1 = vertices[i]; // Titik saat ini
+                const p2 = vertices[(i + 1) % vertices.length]; // Titik berikutnya (loop kembali ke awal untuk menutup poligon)
+                // Panggil bresenhamLine untuk menggambar setiap sisi poligon
+                // Catatan: bresenhamLine yang disiapkan di atas juga akan menambahkan ke tabel,
+                // untuk poligon ini, kita bisa melewati elemen tbody jika tidak ingin mengisi tabel
+                // atau membuat versi bresenhamLine yang tidak mengisi tabel. Untuk demonstrasi,
+                // saya akan memanggilnya tanpa mengisi tabel untuk menghindari kekacauan.
+                // Untuk kesederhanaan demonstrasi, saya akan pakai beginPath/lineTo untuk batas poligon
+                // agar tidak mengisi tabel Bresenham yang spesifik untuk garis.
+
+                // Menggambar sisi poligon dengan beginPath/lineTo untuk visualisasi sederhana
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+
+                // Gambar titik verteks
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillText(`(${p1.x},${p1.y})`, p1.x + 5, p1.y - 5);
+            }
+
+            // --- Implementasi Scan Line Fill Algorithm ---
+            // Cari Ymin dan Ymax dari poligon
+            let minY = vertices[0].y;
+            let maxY = vertices[0].y;
+            for (const v of vertices) {
+                if (v.y < minY) minY = v.y;
+                if (v.y > maxY) maxY = v.y;
+            }
+
+            ctx.fillStyle = 'lightgreen'; // Warna isi poligon
+
+            // Iterasi untuk setiap scan line (dari minY ke maxY)
+            for (let y = minY; y <= maxY; y++) {
+                let intersections = []; // Array untuk menyimpan titik potong pada scan line saat ini
+
+                // Periksa setiap sisi poligon untuk perpotongan dengan scan line 'y'
+                for (let i = 0; i < vertices.length; i++) {
+                    const p1 = vertices[i];
+                    const p2 = vertices[(i + 1) % vertices.length];
+
+                    // Pastikan sisi memotong scan line (satu verteks di atas, satu di bawah atau pada scan line)
+                    if ((p1.y <= y && p2.y > y) || (p2.y <= y && p1.y > y)) {
+                        // Hindari sisi horizontal yang berada tepat di scan line (dapat menyebabkan masalah paritas)
+                        if (p1.y === p2.y) continue; 
+
+                        // Hitung koordinat X perpotongan
+                        const xIntersection = p1.x + (y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y);
+                        intersections.push(xIntersection);
+                    }
+                    // Handle kasus khusus: verteks yang tepat di scan line
+                    else if (p1.y === y && p2.y === y) {
+                        // Sisi horizontal tepat di scanline, abaikan untuk perpotongan
+                        // Ini akan ditangani oleh aturan paritas ganjil-genap jika sisi lainnya dihitung
+                    }
+                    else if (p1.y === y && p2.y > y) {
+                        // Verteks bawah pada scanline, tapi sisi naik
+                        intersections.push(p1.x);
+                    }
+                    else if (p1.y === y && p2.y < y) {
+                        // Verteks atas pada scanline, tapi sisi turun
+                        // Ini bisa menjadi masalah double counting jika tidak hati-hati,
+                        // atau bisa diabaikan jika sisi sebelumnya sudah dihitung.
+                        // Untuk kesederhanaan, hanya tambahkan jika tidak ada sisi yang memotong di sana.
+                    }
+                }
+
+                // Urutkan titik-titik perpotongan berdasarkan X
+                intersections.sort((a, b) => a - b);
+
+                // Isi piksel di antara pasangan titik potong
+                for (let i = 0; i < intersections.length - 1; i += 2) {
+                    const startX = Math.ceil(intersections[i]); // Bulatkan ke atas untuk piksel awal
+                    const endX = Math.floor(intersections[i + 1]); // Bulatkan ke bawah untuk piksel akhir
+
+                    for (let x = startX; x <= endX; x++) {
+                        drawPixel(ctx, x, y, 'lightgreen'); // Gambar piksel isi
+                    }
+                }
+            }
+        }
+
+        // Panggil fungsi gambar garis Bresenham dan poligon saat halaman dimuat
+        window.onload = function() {
+            gambarGarisBresenham(); // Gambar garis Bresenham default
+            gambarPoligon(); // Gambar poligon default
+        };
+    </script>
+</body>
+</html>

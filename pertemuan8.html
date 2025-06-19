@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id"> <head>
+    <meta charset="UTF-8"> <title>Algoritma Transformasi (Translasi & Rotasi)</title> <style>
+        /* CSS untuk styling dasar halaman */
+        body {
+            font-family: Arial, sans-serif; /* Mengatur jenis font dasar */
+            padding: 20px; /* Memberi jarak 20px dari tepi jendela browser */
+        }
+        input[type="number"] {
+            width: 60px; /* Mengatur lebar input angka */
+            margin: 2px; /* Memberi sedikit margin di sekitar input */
+        }
+        canvas {
+            border: 1px solid #000; /* Memberi border hitam tipis pada elemen canvas */
+            margin-top: 10px; /* Memberi jarak 10px dari elemen di atasnya */
+            background: #f0f0f0; /* Warna latar belakang canvas abu-abu muda */
+        }
+        .input-group {
+            margin-bottom: 10px; /* Memberi jarak bawah pada setiap kelompok input */
+        }
+        .output, .penjelasan-bawah {
+            margin-top: 20px; /* Memberi jarak atas pada bagian output dan penjelasan */
+            background: #f9f9f9; /* Warna latar belakang abu-abu sangat muda */
+            padding: 15px; /* Memberi padding di dalam kotak */
+            border: 1px solid #ccc; /* Memberi border abu-abu tipis */
+        }
+        .penjelasan-bawah {
+            background: #f0f8ff; /* Mengubah warna latar belakang untuk bagian penjelasan menjadi biru muda */
+        }
+        table {
+            border-collapse: collapse; /* Menggabungkan border sel tabel agar tidak ada spasi antar sel */
+            width: 100%; /* Mengatur lebar tabel 100% dari parent-nya */
+            margin-top: 15px; /* Memberi jarak atas pada tabel */
+        }
+        table, th, td {
+            border: 1px solid #888; /* Memberi border abu-abu pada tabel, header, dan sel */
+        }
+        th, td {
+            padding: 8px; /* Memberi padding di dalam sel tabel */
+            text-align: center; /* Meratakan teks di tengah sel */
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h2>Algoritma Transformasi (Translasi & Rotasi) - Interaktif</h2>
+
+        <div class="input-group">
+            <h3>Pengaturan Objek (Persegi Panjang)</h3> <label>Titik Awal X: <input type="number" id="objX" value="100"></label> <label>Titik Awal Y: <input type="number" id="objY" value="100"></label><br> <label>Lebar: <input type="number" id="objWidth" value="80"></label> <label>Tinggi: <input type="number" id="objHeight" value="60"></label> </div>
+
+        <div class="input-group">
+            <h3>Translasi (Pergeseran)</h3> <label>Jarak Translasi X (ΔX): <input type="number" id="transX" value="0"></label> <label>Jarak Translasi Y (ΔY): <input type="number" id="transY" value="0"></label><br> <button onclick="applyTranslation()">Terapkan Translasi</button> </div>
+
+        <div class="input-group">
+            <h3>Rotasi</h3> <label>Sudut Rotasi (derajat): <input type="number" id="rotAngle" value="0"></label><br> <label>Pusat Rotasi X: <input type="number" id="rotCenterX" value="100"></label> <label>Pusat Rotasi Y: <input type="number" id="rotCenterY" value="100"></label><br> <button onclick="applyRotation()">Terapkan Rotasi</button> </div>
+
+        <button onclick="resetObject()">Reset Objek</button> <button onclick="drawObject()">Gambar Objek Asli</button> <canvas id="transformCanvas" width="600" height="400"></canvas> <div class="output">
+            <h3>Koordinat Objek Saat Ini</h3> <table id="currentPointsTable">
+                <thead><tr><th>#</th><th>X</th><th>Y</th></tr></thead> <tbody></tbody> </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Transformasi:</strong><br><br>
+            Transformasi geometri adalah operasi yang mengubah posisi, ukuran, atau orientasi objek dalam ruang. Dua transformasi dasar yang umum adalah:
+
+            <ul>
+                <li><strong>Translasi (Pergeseran):</strong> Memindahkan objek dari satu lokasi ke lokasi lain tanpa mengubah orientasi atau ukurannya. Setiap titik $(X, Y)$ pada objek digeser sejauh $(\Delta X, \Delta Y)$.
+                    <br>Rumus Translasi:
+                    <pre>
+X' = X + ΔX
+Y' = Y + ΔY
+                    </pre>
+                </li>
+                <li><strong>Rotasi:</strong> Memutar objek sejauh sudut tertentu di sekitar titik pusat (pivot).
+                    <br>Rumus Rotasi di sekitar titik asal (0,0) untuk sudut $\theta$ (dalam radian):
+                    <pre>
+X' = X * cos(θ) - Y * sin(θ)
+Y' = X * sin(θ) + Y * cos(θ)
+                    </pre>
+                    Jika rotasi dilakukan di sekitar titik pusat $(P_x, P_y)$ lainnya, langkahnya adalah:
+                    <ol>
+                        <li>Geser objek sehingga pusat rotasi berada di titik asal: $X_{temp} = X - P_x$, $Y_{temp} = Y - P_y$.</li>
+                        <li>Lakukan rotasi di sekitar titik asal menggunakan rumus di atas.</li>
+                        <li>Geser kembali objek ke posisi semula: $X' = X'_{temp} + P_x$, $Y' = Y'_{temp} + P_y$.</li>
+                    </ol>
+                </li>
+            </ul>
+            Dalam implementasi ini, kita akan bekerja dengan objek 2D yang didefinisikan oleh sekumpulan titik. Setiap transformasi akan diterapkan pada setiap titik objek.
+        </div>
+
+        <script>
+            // Mendapatkan referensi ke elemen canvas dan konteks gambar 2D-nya
+            const canvas = document.getElementById("transformCanvas");
+            const ctx = canvas.getContext("2d");
+
+            // Mendapatkan referensi ke tbody tabel untuk mengisi data koordinat objek saat ini
+            const currentPointsTableBody = document.querySelector("#currentPointsTable tbody");
+
+            let originalObjectPoints = []; // Array untuk menyimpan titik-titik sudut objek (persegi panjang) pada posisi aslinya
+            let currentObjectPoints = []; // Array untuk menyimpan titik-titik sudut objek setelah diterapkan transformasi
+
+            /**
+             * Menggambar sebuah titik (lingkaran kecil) pada kanvas.
+             * @param {number} x - Koordinat X titik.
+             * @param {number} y - Koordinat Y titik.
+             * @param {string} color - Warna titik (default: 'red').
+             * @param {number} radius - Radius lingkaran titik (default: 3).
+             */
+            function drawPoint(x, y, color = 'red', radius = 3) {
+                ctx.beginPath(); // Memulai jalur gambar baru
+                ctx.arc(x, y, radius, 0, Math.PI * 2); // Menggambar busur lingkaran penuh
+                ctx.fillStyle = color; // Mengatur warna isian
+                ctx.fill(); // Mengisi lingkaran dengan warna
+            }
+
+            /**
+             * Menggambar sebuah objek (persegi panjang) pada kanvas dari kumpulan titik-titiknya.
+             * @param {Array<Object>} points - Array objek titik {x, y} yang membentuk objek (misal: 4 sudut persegi panjang).
+             * @param {string} strokeColor - Warna garis tepi objek (default: 'blue').
+             * @param {string} fillColor - Warna isian objek (opsional, default 'transparent').
+             */
+            function drawShape(points, strokeColor = 'blue', fillColor = 'transparent') {
+                if (points.length === 0) return; // Jika tidak ada titik, berhenti fungsi
+
+                ctx.beginPath(); // Memulai jalur gambar baru
+                ctx.moveTo(points[0].x, points[0].y); // Memindahkan "pena" ke titik pertama objek
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y); // Menggambar garis ke setiap titik berikutnya
+                }
+                ctx.closePath(); // Menutup jalur, menghubungkan titik terakhir ke titik pertama untuk membentuk poligon tertutup
+
+                if (fillColor !== 'transparent') { // Jika ada warna isian yang ditentukan
+                    ctx.fillStyle = fillColor; // Mengatur warna isian
+                    ctx.fill(); // Mengisi bentuk
+                }
+                ctx.strokeStyle = strokeColor; // Mengatur warna garis tepi
+                ctx.lineWidth = 2; // Mengatur ketebalan garis tepi
+                ctx.stroke(); // Menggambar garis tepi bentuk
+
+                // Gambar titik-titik sudut objek sebagai penanda
+                points.forEach(p => drawPoint(p.x, p.y, 'red', 4));
+            }
+
+            /**
+             * Menginisialisasi atau mengatur ulang titik-titik objek (persegi panjang) ke posisi dan ukuran default
+             * yang diambil dari input "Pengaturan Objek".
+             */
+            function resetObject() {
+                // Mengambil nilai awal X, Y, Lebar, dan Tinggi dari input
+                const x = parseFloat(document.getElementById('objX').value);
+                const y = parseFloat(document.getElementById('objY').value);
+                const width = parseFloat(document.getElementById('objWidth').value);
+                const height = parseFloat(document.getElementById('objHeight').value);
+
+                // Mendefinisikan 4 sudut persegi panjang berdasarkan input
+                originalObjectPoints = [
+                    { x: x, y: y }, // Sudut kiri atas
+                    { x: x + width, y: y }, // Sudut kanan atas
+                    { x: x + width, y: y + height }, // Sudut kanan bawah
+                    { x: x, y: y + height } // Sudut kiri bawah
+                ];
+                // Mengatur ulang titik saat ini sama dengan titik asli (membuat salinan mendalam agar tidak mereferensi objek yang sama)
+                currentObjectPoints = JSON.parse(JSON.stringify(originalObjectPoints));
+
+                // Mengatur ulang nilai input translasi dan rotasi ke 0 atau nilai default
+                document.getElementById('transX').value = 0;
+                document.getElementById('transY').value = 0;
+                document.getElementById('rotAngle').value = 0;
+                // Mengatur pusat rotasi default ke titik awal objek (sudut kiri atas)
+                document.getElementById('rotCenterX').value = x;
+                document.getElementById('rotCenterY').value = y;
+
+                drawObject(); // Gambar objek pada posisi asli setelah reset
+            }
+
+            /**
+             * Membersihkan kanvas dan menggambar ulang objek menggunakan titik-titik `currentObjectPoints`.
+             * Fungsi ini dipanggil setelah setiap transformasi untuk memperbarui tampilan.
+             */
+            function drawObject() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh area kanvas
+                drawShape(currentObjectPoints); // Menggambar objek dengan koordinat yang sedang aktif
+                updateCurrentPointsTable(); // Memperbarui tabel output dengan koordinat baru
+            }
+
+            /**
+             * Menerapkan transformasi translasi (pergeseran) ke setiap titik objek saat ini.
+             * Mengambil nilai pergeseran (ΔX, ΔY) dari input.
+             */
+            function applyTranslation() {
+                // Mengambil nilai pergeseran X dan Y dari input
+                const deltaX = parseFloat(document.getElementById('transX').value);
+                const deltaY = parseFloat(document.getElementById('transY').value);
+
+                // Menerapkan rumus translasi (X' = X + ΔX, Y' = Y + ΔY) ke setiap titik dalam array
+                currentObjectPoints = currentObjectPoints.map(p => {
+                    return {
+                        x: p.x + deltaX, // Titik X baru
+                        y: p.y + deltaY  // Titik Y baru
+                    };
+                });
+
+                drawObject(); // Gambar ulang objek yang telah ditranslasikan
+            }
+
+            /**
+             * Menerapkan transformasi rotasi ke setiap titik objek saat ini.
+             * Rotasi dilakukan di sekitar pusat rotasi yang ditentukan oleh pengguna.
+             */
+            function applyRotation() {
+                // Mengambil sudut rotasi dari input dan mengonversinya dari derajat ke radian
+                const angleDeg = parseFloat(document.getElementById('rotAngle').value);
+                const angleRad = angleDeg * Math.PI / 180; // Konversi derajat ke radian (Math.PI / 180)
+
+                // Mengambil koordinat pusat rotasi dari input
+                const rotCx = parseFloat(document.getElementById('rotCenterX').value);
+                const rotCy = parseFloat(document.getElementById('rotCenterY').value);
+
+                // Menerapkan rumus rotasi ke setiap titik objek
+                currentObjectPoints = currentObjectPoints.map(p => {
+                    // Langkah 1: Geser titik objek sehingga pusat rotasi menjadi titik asal (0,0)
+                    // Ini penting agar rumus rotasi di sekitar titik asal dapat digunakan
+                    const tempX = p.x - rotCx;
+                    const tempY = p.y - rotCy;
+
+                    // Langkah 2: Lakukan rotasi menggunakan rumus rotasi di sekitar titik asal
+                    // X' = X * cos(θ) - Y * sin(θ)
+                    // Y' = X * sin(θ) + Y * cos(θ)
+                    const rotatedX = tempX * Math.cos(angleRad) - tempY * Math.sin(angleRad);
+                    const rotatedY = tempX * Math.sin(angleRad) + tempY * Math.cos(angleRad);
+
+                    // Langkah 3: Geser kembali titik yang sudah dirotasi ke posisi semula
+                    // relative terhadap pusat rotasi asli.
+                    return {
+                        x: rotatedX + rotCx, // Titik X baru setelah digeser kembali
+                        y: rotatedY + rotCy  // Titik Y baru setelah digeser kembali
+                    };
+                });
+
+                drawObject(); // Gambar ulang objek yang telah dirotasi
+            }
+
+            /**
+             * Memperbarui tampilan tabel HTML dengan koordinat X dan Y dari setiap titik objek saat ini.
+             */
+            function updateCurrentPointsTable() {
+                currentPointsTableBody.innerHTML = ''; // Mengosongkan isi tabel sebelumnya
+                // Iterasi setiap titik dalam array currentObjectPoints
+                currentObjectPoints.forEach((p, index) => {
+                    const row = currentPointsTableBody.insertRow(); // Membuat baris baru di tabel
+                    row.insertCell().textContent = index; // Menambahkan sel untuk nomor indeks titik
+                    row.insertCell().textContent = p.x.toFixed(2); // Menambahkan sel untuk koordinat X (dibulatkan 2 desimal)
+                    row.insertCell().textContent = p.y.toFixed(2); // Menambahkan sel untuk koordinat Y (dibulatkan 2 desimal)
+                });
+            }
+
+            // Inisialisasi: panggil fungsi resetObject() saat halaman pertama kali dimuat
+            // Ini akan menggambar objek awal dan mengatur nilai input default.
+            resetObject();
+        </script>
+    </div>
+</body>
+</html>

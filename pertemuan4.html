@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritma Lingkaran & Elips Titik Tengah Interaktif</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Mengatur ulang gaya dasar untuk body */
+        body {
+            font-family: 'Roboto', Arial, sans-serif; /* Menggunakan font Roboto */
+            padding: 20px; /* Padding di sekitar konten */
+            background-color: #eef2f6; /* Latar belakang abu-abu muda */
+            color: #333; /* Warna teks gelap */
+            line-height: 1.6; /* Tinggi baris untuk keterbacaan */
+        }
+
+        /* Gaya untuk kontainer utama */
+        .container {
+            max-width: 900px; /* Lebar maksimum kontainer */
+            margin: 0 auto; /* Pusatkan kontainer */
+            background: #ffffff; /* Latar belakang putih untuk kontainer */
+            padding: 30px; /* Padding di dalam kontainer */
+            border-radius: 12px; /* Sudut membulat */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Efek bayangan lembut */
+        }
+
+        /* Gaya untuk judul */
+        h2, h3, h4 {
+            color: #2c3e50; /* Warna judul yang lebih gelap */
+            border-bottom: 2px solid #3498db; /* Garis bawah biru */
+            padding-bottom: 8px; /* Padding di bawah garis */
+            margin-top: 25px; /* Margin atas */
+            margin-bottom: 15px; /* Margin bawah */
+        }
+
+        /* Gaya untuk grup input */
+        .input-group {
+            margin-bottom: 15px; /* Margin bawah */
+            padding: 15px; /* Padding di dalam grup input */
+            background-color: #f8fbfd; /* Latar belakang sangat muda */
+            border: 1px solid #dde7f0; /* Border tipis */
+            border-radius: 8px; /* Sudut membulat */
+            display: flex; /* Menggunakan flexbox */
+            flex-wrap: wrap; /* Memungkinkan wrap pada item */
+            align-items: center; /* Sejajarkan item di tengah secara vertikal */
+            gap: 15px; /* Jarak antar item */
+        }
+
+        /* Gaya untuk label di dalam grup input */
+        .input-group label {
+            font-weight: bold; /* Teks tebal */
+            color: #555; /* Warna teks abu-abu */
+            display: flex; /* Menggunakan flexbox untuk label dan input */
+            align-items: center; /* Sejajarkan input dengan teks label */
+            gap: 5px; /* Jarak antara label dan input */
+        }
+
+        /* Gaya untuk elemen input */
+        input[type="number"] {
+            width: 80px; /* Lebar input yang sedikit lebih lebar */
+            padding: 10px; /* Padding di dalam input */
+            margin: 2px 0; /* Margin atas/bawah */
+            border: 1px solid #ccc; /* Border abu-abu */
+            border-radius: 5px; /* Sudut membulat */
+            font-size: 1em; /* Ukuran font */
+            box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
+        }
+
+        /* Gaya untuk tombol */
+        button {
+            background-color: #3498db; /* Warna biru */
+            color: white; /* Teks putih */
+            padding: 10px 20px; /* Padding tombol */
+            border: none; /* Tanpa border */
+            border-radius: 5px; /* Sudut membulat */
+            cursor: pointer; /* Kursor pointer saat diarahkan */
+            font-size: 1em; /* Ukuran font */
+            transition: background-color 0.3s ease; /* Transisi halus saat hover */
+        }
+
+        button:hover {
+            background-color: #2980b9; /* Warna biru lebih gelap saat hover */
+        }
+
+        /* Gaya untuk elemen canvas */
+        canvas {
+            display: block; /* Menjadikan canvas elemen blok */
+            margin: 20px auto; /* Pusatkan canvas dan margin atas/bawah */
+            border: 2px solid #2c3e50; /* Border hitam yang lebih tebal */
+            border-radius: 8px; /* Sudut membulat */
+            background-color: #fdfdfd; /* Latar belakang canvas putih */
+        }
+
+        /* Gaya untuk bagian output dan penjelasan */
+        .output, .explanation {
+            margin-top: 30px; /* Margin atas */
+            background: #f9f9f9; /* Latar belakang abu-abu terang */
+            padding: 20px; /* Padding di dalam */
+            border: 1px solid #e0e0e0; /* Border abu-abu */
+            border-radius: 10px; /* Sudut membulat */
+        }
+
+        /* Gaya khusus untuk bagian penjelasan */
+        .explanation {
+            background: #e6f7ff; /* Latar belakang biru muda */
+            border-color: #b3e0ff; /* Warna border biru muda */
+            margin-bottom: 20px; /* Margin bawah */
+        }
+
+        /* Gaya untuk tabel */
+        table {
+            border-collapse: collapse; /* Menggabungkan border sel */
+            width: 100%; /* Lebar tabel 100% */
+            margin-top: 20px; /* Margin atas */
+            font-size: 0.9em; /* Ukuran font sedikit lebih kecil */
+        }
+
+        /* Gaya untuk border sel dan tabel */
+        table, th, td {
+            border: 1px solid #dcdcdc; /* Border abu-abu terang */
+        }
+
+        /* Gaya untuk padding dan perataan teks sel tabel */
+        th, td {
+            padding: 10px; /* Padding sel */
+            text-align: center; /* Teks rata tengah */
+        }
+
+        /* Gaya untuk header tabel */
+        th {
+            background-color: #f2f2f2; /* Latar belakang header abu-abu */
+            font-weight: bold; /* Teks tebal */
+            color: #444; /* Warna teks gelap */
+        }
+
+        /* Gaya untuk baris ganjil pada tabel */
+        tr:nth-child(even) {
+            background-color: #fefefe; /* Latar belakang baris genap lebih terang */
+        }
+
+        /* Gaya untuk pr (blok kode) */
+        pre {
+            background-color: #ecf0f1; /* Latar belakang abu-abu terang untuk kode */
+            padding: 10px; /* Padding di dalam blok kode */
+            border-radius: 5px; /* Sudut membulat */
+            overflow-x: auto; /* Memungkinkan scroll horizontal jika kode terlalu panjang */
+            font-family: 'Courier New', monospace; /* Font monospace */
+            font-size: 0.9em; /* Ukuran font kode */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Algoritma Lingkaran & Elips Titik Tengah - Interaktif</h2>
+
+        <h3>Gambar Lingkaran</h3>
+        <div class="input-group">
+            <label>Pusat (xc, yc):
+                <input type="number" id="circ_xc" value="200">
+                <input type="number" id="circ_yc" value="200">
+            </label>
+            <label>Jari-jari (r):
+                <input type="number" id="circ_r" value="100">
+            </label>
+            <button onclick="gambarLingkaranMidpoint()">Gambar Lingkaran</button>
+            <button onclick="clearCanvas()">Bersihkan Canvas</button>
+        </div>
+
+        <h3>Gambar Elips</h3>
+        <div class="input-group">
+            <label>Pusat (xc, yc):
+                <input type="number" id="ell_xc" value="200">
+                <input type="number" id="ell_yc" value="200">
+            </label>
+            <label>Jari-jari Rx:
+                <input type="number" id="ell_rx" value="150">
+            </label>
+            <label>Jari-jari Ry:
+                <input type="number" id="ell_ry" value="70">
+            </label>
+            <button onclick="gambarElipsMidpoint()">Gambar Elips</button>
+            <button onclick="clearCanvas()">Bersihkan Canvas</button>
+        </div>
+
+        <canvas id="geometryCanvas" width="600" height="400"></canvas>
+
+        <div class="output">
+            <h4 id="outputTitle">Hasil Perhitungan</h4>
+            <strong>Jumlah Titik yang Dihitung: </strong><span id="jumlahTitikGeo">0</span>
+            <table id="tabelHasilGeo">
+                <thead>
+                    <tr>
+                        <th>Langkah</th>
+                        <th>(X,Y)</th>
+                        <th>P (Parameter Keputusan)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="explanation">
+            <h3>Penjelasan Algoritma</h3>
+
+            <hr> <h4>Algoritma Lingkaran Titik Tengah (Midpoint Circle Algorithm):</h4>
+            <p>Algoritma ini merupakan metode yang efisien untuk merasterisasi lingkaran pada tampilan piksel. Ia menggunakan aritmetika integer untuk menentukan piksel mana yang harus diaktifkan tanpa menggunakan perhitungan floating-point yang mahal atau fungsi trigonometri. Kunci utamanya adalah memanfaatkan **simetri 8-arah** lingkaran. Kita hanya perlu menghitung titik-titik di satu oktan (1/8 bagian lingkaran, biasanya dari $(0, r)$ sampai $x=y$), kemudian merefleksikannya ke 7 oktan lainnya untuk menyelesaikan seluruh lingkaran.</p>
+            <p>Pada setiap langkah, algoritma memilih antara dua piksel kandidat berikutnya (misalnya, piksel "timur" atau piksel "tenggara") dengan memeriksa nilai dari **parameter keputusan ($P$)**. Nilai $P$ menunjukkan apakah titik tengah antara dua piksel kandidat berada di dalam atau di luar lingkaran ideal.</p>
+            <p>Langkah-langkah umum:</p>
+            <ol>
+                <li><strong>Inisialisasi Titik Awal:</strong> Mulai dari $(x, y) = (0, r)$, di mana $r$ adalah jari-jari lingkaran.</li>
+                <li><strong>Inisialisasi Parameter Keputusan:</strong> Hitung nilai awal untuk parameter keputusan $P$:
+                    <pre>$P = 1 - r$</pre>
+                    <p>*(Beberapa variasi mungkin menggunakan $P = 5/4 - r$ untuk menghindari floating point awal, namun $1-r$ lebih umum dalam konteks integer.)*</p>
+                </li>
+                <li><strong>Iterasi dan Gambar Piksel:</strong> Ulangi selama $x \le y$:
+                    <ul>
+                        <li>**Gambar 8 Titik Simetri:** Untuk setiap titik $(x, y)$ yang dihitung, plot 8 titik simetri di sekitar pusat $(x_c, y_c)$:
+                            <pre>$(x_c + x, y_c + y)$, $(x_c - x, y_c + y)$, $(x_c + x, y_c - y)$, $(x_c - x, y_c - y)$,
+$(x_c + y, y_c + x)$, $(x_c - y, y_c + x)$, $(x_c + y, y_c - x)$, $(x_c - y, y_c - x)$.</pre>
+                        </li>
+                        <li>**Perbarui Parameter Keputusan:**
+                            <ul>
+                                <li>Jika $P < 0$ (titik tengah di dalam lingkaran, pilih piksel "Timur"):
+                                    <pre>$P = P + 2x + 3$</pre>
+                                    Increment $x$ ($x++$).
+                                </li>
+                                <li>Jika $P \ge 0$ (titik tengah di luar/pada lingkaran, pilih piksel "Tenggara"):
+                                    <pre>$P = P + 2(x - y) + 5$</pre>
+                                    Increment $x$ ($x++$) dan decrement $y$ ($y--$).
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+            <p>Algoritma berhenti ketika $x$ melebihi $y$, karena pada titik itu simetri akan mulai tumpang tindih.</p>
+
+            <hr> <h4>Algoritma Elips Titik Tengah (Midpoint Ellipse Algorithm):</h4>
+            <p>Algoritma ini mirip dengan algoritma lingkaran tetapi disesuaikan untuk bentuk elips yang memiliki dua jari-jari, $R_x$ (sumbu semi-mayor horizontal) dan $R_y$ (sumbu semi-mayor vertikal). Elips hanya memiliki **simetri 4-arah**. Perhitungan dibagi menjadi dua daerah (region) berdasarkan perubahan kemiringan elips, karena kemiringan berubah secara drastis dari horizontal ke vertikal.</p>
+            <p>Langkah-langkah umum:</p>
+            <ol>
+                <li><strong>Inisialisasi Titik Awal:</strong> Mulai dari $(x, y) = (0, R_y)$.</li>
+                <li><strong>Parameter Konstanta:</strong> Definisikan konstanta untuk perhitungan lebih mudah: $Rx^2 = R_x * R_x$, $Ry^2 = R_y * R_y$.</li>
+                <li><strong>Region 1 (Daerah Horisontal):</strong>
+                    <ul>
+                        <li>**Inisialisasi Parameter Keputusan Region 1:**
+                            <pre>$P_1 = Ry^2 - Rx^2 * Ry + 0.25 * Rx^2$</pre>
+                        </li>
+                        <li>**Iterasi:** Ulangi selama $2 * Ry^2 * x \le 2 * Rx^2 * y$ (selama kemiringan absolut $\le 1$):
+                            <ul>
+                                <li>**Gambar 4 Titik Simetri:** Plot $(x_c \pm x, y_c \pm y)$.</li>
+                                <li>**Update $x$:** Increment $x$ ($x++$).</li>
+                                <li>**Perbarui Parameter Keputusan Region 1:**
+                                    <ul>
+                                        <li>Jika $P_1 < 0$:
+                                            <pre>$P_1 = P_1 + 2 * Ry^2 * x + Ry^2$</pre>
+                                        </li>
+                                        <li>Jika $P_1 \ge 0$:
+                                            <pre>$P_1 = P_1 + 2 * Ry^2 * x - 2 * Rx^2 * y + Ry^2$</pre>
+                                            Decrement $y$ ($y--$).
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Region 2 (Daerah Vertikal):</strong>
+                    <ul>
+                        <li>**Inisialisasi Parameter Keputusan Region 2:** (Gunakan titik $(x, y)$ terakhir dari Region 1)
+                            <pre>$P_2 = Ry^2 * (x + 0.5)^2 + Rx^2 * (y - 1)^2 - Rx^2 * Ry^2$</pre>
+                        </li>
+                        <li>**Iterasi:** Ulangi selama $y \ge 0$:
+                            <ul>
+                                <li>**Gambar 4 Titik Simetri:** Plot $(x_c \pm x, y_c \pm y)$.</li>
+                                <li>**Update $y$:** Decrement $y$ ($y--$).</li>
+                                <li>**Perbarui Parameter Keputusan Region 2:**
+                                    <ul>
+                                        <li>Jika $P_2 > 0$:
+                                            <pre>$P_2 = P_2 - 2 * Rx^2 * y + Rx^2$</pre>
+                                        </li>
+                                        <li>Jika $P_2 \le 0$:
+                                            <pre>$P_2 = P_2 + 2 * Ry^2 * x - 2 * Rx^2 * y + Rx^2$</pre>
+                                            Increment $x$ ($x++$).
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+            <p>Pembagian menjadi dua region memastikan akurasi dan efisiensi karena kemiringan elips berubah dari kurang dari 1 menjadi lebih dari 1.</p>
+        </div>
+    </div>
+
+    <script>
+        // Mendapatkan elemen canvas dari DOM
+        const canvas = document.getElementById("geometryCanvas");
+        // Mendapatkan konteks gambar 2D dari canvas
+        const ctx = canvas.getContext("2d");
+
+        /**
+         * Fungsi untuk memplot 4 titik simetri untuk elips (atau lingkaran jika y=x)
+         * di sekitar pusat (xc, yc) berdasarkan titik (x, y) yang diberikan.
+         * @param {number} xc - Koordinat X pusat.
+         * @param {number} yc - Koordinat Y pusat.
+         * @param {number} x - Offset X dari pusat.
+         * @param {number} y - Offset Y dari pusat.
+         * @param {string} color - Warna piksel (default: "red").
+         * @returns {Array<Object>} Array objek titik yang diplot ({px, py}).
+         */
+        function plot4points(xc, yc, x, y, color = "red") {
+            const points = []; // Array untuk menyimpan titik-titik yang akan diplot
+
+            // Menambahkan 4 titik simetri: kuadran I, II, III, IV
+            points.push({px: xc + x, py: yc + y}); // Titik di kuadran I
+            points.push({px: xc - x, py: yc + y}); // Titik di kuadran II
+            points.push({px: xc + x, py: yc - y}); // Titik di kuadran III
+            points.push({px: xc - x, py: yc - y}); // Titik di kuadran IV
+
+            // Loop untuk menggambar setiap titik yang dihitung
+            points.forEach(p => {
+                ctx.fillStyle = color; // Mengatur warna piksel
+                ctx.beginPath(); // Memulai jalur baru untuk menggambar
+                ctx.arc(p.px, p.py, 2, 0, 2 * Math.PI); // Menggambar lingkaran kecil (radius 2px) sebagai piksel
+                ctx.fill(); // Mengisi lingkaran dengan warna
+            });
+            return points; // Mengembalikan titik-titik yang diplot
+        }
+
+        /**
+         * Fungsi untuk memplot 8 titik simetri untuk lingkaran
+         * di sekitar pusat (xc, yc) berdasarkan titik (x, y) di oktan pertama.
+         * @param {number} xc - Koordinat X pusat.
+         * @param {number} yc - Koordinat Y pusat.
+         * @param {number} x - Offset X dari pusat.
+         * @param {number} y - Offset Y dari pusat.
+         * @param {string} color - Warna piksel (default: "red").
+         * @returns {Array<Object>} Array objek titik yang diplot ({px, py}).
+         */
+        function plot8points(xc, yc, x, y, color = "red") {
+            const points = []; // Array untuk menyimpan titik-titik yang akan diplot
+
+            // Menambahkan 4 titik simetri dasar (sama seperti plot4points)
+            points.push({px: xc + x, py: yc + y}); // (xc+x, yc+y)
+            points.push({px: xc - x, py: yc + y}); // (xc-x, yc+y)
+            points.push({px: xc + x, py: yc - y}); // (xc+x, yc-y)
+            points.push({px: xc - x, py: yc - y}); // (xc-x, yc-y)
+
+            // Menambahkan 4 titik simetri yang direfleksikan (swap x dan y)
+            points.push({px: xc + y, py: yc + x}); // (xc+y, yc+x)
+            points.push({px: xc - y, py: yc + x}); // (xc-y, yc+x)
+            points.push({px: xc + y, py: yc - x}); // (xc+y, yc-x)
+            points.push({px: xc - y, py: yc - x}); // (xc-y, yc-x)
+
+            // Loop untuk menggambar setiap titik yang dihitung
+            points.forEach(p => {
+                ctx.fillStyle = color; // Mengatur warna piksel
+                ctx.beginPath(); // Memulai jalur baru
+                ctx.arc(p.px, p.py, 2, 0, 2 * Math.PI); // Menggambar lingkaran kecil sebagai piksel
+                ctx.fill(); // Mengisi lingkaran
+            });
+            return points; // Mengembalikan titik-titik yang diplot
+        }
+
+        /**
+         * Fungsi untuk memperbarui tabel hasil perhitungan dengan data langkah.
+         * @param {Array<Object>} data - Array objek yang berisi {x, y, p} untuk setiap langkah.
+         * @param {string} type - Jenis geometri yang dihitung ("Lingkaran" atau "Elips").
+         */
+        function updateTable(data, type) {
+            // Memperbarui judul output
+            document.getElementById("outputTitle").textContent = `Hasil Perhitungan ${type}`;
+            // Mendapatkan tbody dari tabel
+            const tbody = document.querySelector("#tabelHasilGeo tbody");
+            // Mengosongkan isi tbody sebelum menambahkan data baru
+            tbody.innerHTML = "";
+            // Memperbarui jumlah titik yang dihitung
+            document.getElementById("jumlahTitikGeo").textContent = data.length;
+
+            // Loop melalui data dan tambahkan baris ke tabel
+            data.forEach((item, index) => {
+                const row = document.createElement("tr"); // Membuat elemen baris baru (<tr>)
+                // Mengisi baris dengan data langkah, koordinat (x,y), dan parameter keputusan P
+                // toFixed(2) digunakan untuk memformat parameter P menjadi 2 angka di belakang koma
+                row.innerHTML = `<td>${index}</td><td>(${item.x}, ${item.y})</td><td>${item.p !== undefined ? item.p.toFixed(2) : '-'}</td>`;
+                tbody.appendChild(row); // Menambahkan baris ke tbody tabel
+            });
+        }
+
+        /**
+         * Fungsi untuk membersihkan canvas dan mereset tabel hasil.
+         */
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh canvas
+            // Mereset judul output
+            document.getElementById("outputTitle").textContent = "Hasil Perhitungan";
+            // Mengosongkan jumlah titik
+            document.getElementById("jumlahTitikGeo").textContent = "0";
+            // Mengosongkan isi tbody tabel
+            document.querySelector("#tabelHasilGeo tbody").innerHTML = "";
+        }
+
+        /**
+         * Fungsi untuk menggambar lingkaran menggunakan Algoritma Titik Tengah (Midpoint Circle Algorithm).
+         * Mengambil input pusat dan jari-jari, kemudian menghitung dan memplot piksel.
+         */
+        function gambarLingkaranMidpoint() {
+            clearCanvas(); // Membersihkan canvas sebelum menggambar yang baru
+
+            // Mendapatkan nilai pusat (xc, yc) dan jari-jari (r) dari input field
+            const xc = parseInt(document.getElementById("circ_xc").value);
+            const yc = parseInt(document.getElementById("circ_yc").value);
+            const r = parseInt(document.getElementById("circ_r").value);
+
+            let x = 0; // Inisialisasi x pada 0 (titik awal di oktan pertama)
+            let y = r; // Inisialisasi y pada jari-jari (titik awal di oktan pertama)
+            let p = 1 - r; // Inisialisasi parameter keputusan awal (P) untuk lingkaran
+
+            const calculatedPoints = []; // Array untuk menyimpan data setiap langkah untuk tabel
+
+            // Gambar titik pusat lingkaran sebagai lingkaran biru kecil
+            ctx.fillStyle = "blue"; // Mengatur warna biru
+            ctx.beginPath(); // Memulai jalur baru
+            ctx.arc(xc, yc, 3, 0, 2 * Math.PI); // Menggambar lingkaran kecil di pusat
+            ctx.fill(); // Mengisi lingkaran pusat
+
+            // Loop selama x tidak melebihi y (menggambar satu oktan lingkaran)
+            while (x <= y) {
+                // Memplot 8 titik simetri berdasarkan (x,y) dan menyimpan titik-titik yang diplot
+                const plotted = plot8points(xc, yc, x, y);
+                // Menambahkan setiap titik yang diplot ke array calculatedPoints
+                // (Setiap 8 titik akan memiliki nilai P yang sama untuk langkah saat ini)
+                plotted.forEach(pt => calculatedPoints.push({ x: pt.px, y: pt.py, p: p }));
+
+                // Memperbarui parameter keputusan (P) dan koordinat x, y
+                if (p < 0) {
+                    // Jika P < 0, titik tengah berada di dalam lingkaran, pilih piksel Timur
+                    p = p + 2 * x + 3; // Update P
+                } else {
+                    // Jika P >= 0, titik tengah berada di luar/pada lingkaran, pilih piksel Tenggara
+                    p = p + 2 * (x - y) + 5; // Update P
+                    y--; // Decrement y
+                }
+                x++; // Increment x
+            }
+            // Memperbarui tabel hasil dengan data lingkaran yang dihitung
+            updateTable(calculatedPoints, "Lingkaran");
+        }
+
+        /**
+         * Fungsi untuk menggambar elips menggunakan Algoritma Titik Tengah (Midpoint Ellipse Algorithm).
+         * Mengambil input pusat dan jari-jari Rx, Ry, kemudian menghitung dan memplot piksel.
+         */
+        function gambarElipsMidpoint() {
+            clearCanvas(); // Membersihkan canvas sebelum menggambar yang baru
+
+            // Mendapatkan nilai pusat (xc, yc) dan jari-jari (rx, ry) dari input field
+            const xc = parseInt(document.getElementById("ell_xc").value);
+            const yc = parseInt(document.getElementById("ell_yc").value);
+            const rx = parseInt(document.getElementById("ell_rx").value);
+            const ry = parseInt(document.getElementById("ell_ry").value);
+
+            let x = 0; // Inisialisasi x pada 0 (titik awal di kuadran pertama)
+            let y = ry; // Inisialisasi y pada jari-jari y (ry) (titik awal di kuadran pertama)
+
+            // Gambar titik pusat elips sebagai lingkaran biru kecil
+            ctx.fillStyle = "blue"; // Mengatur warna biru
+            ctx.beginPath(); // Memulai jalur baru
+            ctx.arc(xc, yc, 3, 0, 2 * Math.PI); // Menggambar lingkaran kecil di pusat
+            ctx.fill(); // Mengisi lingkaran pusat
+
+            const calculatedPoints = []; // Array untuk menyimpan data setiap langkah untuk tabel
+
+            // Hitung konstanta r_x_sq (Rx^2) dan r_y_sq (Ry^2) untuk efisiensi perhitungan
+            const rx_sq = rx * rx;
+            const ry_sq = ry * ry;
+
+            // --- REGION 1 --- (Daerah dengan gradien absolut <= 1)
+            // Inisialisasi parameter keputusan awal untuk Region 1
+            let p1 = ry_sq - rx_sq * ry + 0.25 * rx_sq;
+
+            // Loop selama kondisi Region 1 terpenuhi (2*ry^2*x < 2*rx^2*y),
+            // yang menunjukkan kemiringan absolut masih kurang dari atau sama dengan 1
+            while (2 * ry_sq * x <= 2 * rx_sq * y) {
+                // Memplot 4 titik simetri berdasarkan (x,y) dan menyimpan titik-titik yang diplot
+                const plotted = plot4points(xc, yc, x, y);
+                // Menambahkan setiap titik yang diplot ke array calculatedPoints
+                plotted.forEach(pt => calculatedPoints.push({ x: pt.px, y: pt.py, p: p1 }));
+
+                x++; // Increment x
+                // Perbarui parameter keputusan Region 1
+                if (p1 < 0) {
+                    // Jika p1 < 0, pilih piksel berikutnya di timur (horizontal)
+                    p1 = p1 + 2 * ry_sq * x + ry_sq;
+                } else {
+                    // Jika p1 >= 0, pilih piksel berikutnya di tenggara (diagonal)
+                    y--; // Decrement y
+                    p1 = p1 + 2 * ry_sq * x - 2 * rx_sq * y + ry_sq;
+                }
+            }
+
+            // --- REGION 2 --- (Daerah dengan gradien absolut > 1)
+            // Inisialisasi parameter keputusan awal untuk Region 2,
+            // menggunakan nilai x dan y terakhir dari Region 1
+            let p2 = ry_sq * (x + 0.5) * (x + 0.5) + rx_sq * (y - 1) * (y - 1) - rx_sq * ry_sq;
+
+            // Loop selama y masih positif atau nol
+            while (y >= 0) {
+                // Memplot 4 titik simetri berdasarkan (x,y) dan menyimpan titik-titik yang diplot
+                const plotted = plot4points(xc, yc, x, y);
+                // Menambahkan setiap titik yang diplot ke array calculatedPoints
+                plotted.forEach(pt => calculatedPoints.push({ x: pt.px, y: pt.py, p: p2 }));
+
+                y--; // Decrement y
+                // Perbarui parameter keputusan Region 2
+                if (p2 > 0) {
+                    // Jika p2 > 0, pilih piksel berikutnya di selatan (vertikal)
+                    p2 = p2 - 2 * rx_sq * y + rx_sq;
+                } else {
+                    // Jika p2 <= 0, pilih piksel berikutnya di barat daya (diagonal)
+                    x++; // Increment x
+                    p2 = p2 + 2 * ry_sq * x - 2 * rx_sq * y + rx_sq;
+                }
+            }
+            // Memperbarui tabel hasil dengan data elips yang dihitung
+            updateTable(calculatedPoints, "Elips");
+        }
+
+        // Memanggil fungsi untuk menggambar lingkaran dan elips saat halaman pertama kali dimuat.
+        // Ini memberikan tampilan awal saat user membuka halaman.
+        document.addEventListener('DOMContentLoaded', () => {
+            gambarLingkaranMidpoint();
+            // Anda bisa memilih untuk tidak memanggil gambarElipsMidpoint() secara default
+            // agar canvas tidak langsung ditimpa, atau membiarkannya jika memang
+            // ingin kedua contoh langsung terlihat. Untuk demonstrasi, kita panggil keduanya.
+            // gambarElipsMidpoint(); // Dihilangkan agar hanya lingkaran yang default tergambar
+        });
+    </script>
+</body>
+</html>

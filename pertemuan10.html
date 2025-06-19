@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Viewing dan Clipping (Cohen-Sutherland)</title> <style>
+        /*
+         * CSS Styling untuk tata letak dan elemen halaman.
+         * Bagian ini mendefinisikan presentasi visual dari alat clipping interaktif.
+         */
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Mengatur keluarga font yang modern dan bersih. */
+            padding: 20px; /* Menambahkan padding di sekitar seluruh konten body. */
+            background-color: #eef4f8; /* Warna latar belakang halaman (biru-abu muda). */
+            color: #333; /* Warna teks yang lebih gelap untuk keterbacaan yang lebih baik. */
+            line-height: 1.6; /* Meningkatkan jarak antar baris untuk teks. */
+            margin: 0; /* Menghilangkan margin default body. */
+        }
+
+        /* Kontainer utama untuk menengahkan konten dan membatasi lebarnya. */
+        div[style="max-width: 800px; margin: 0 auto;"] {
+            background-color: #ffffff; /* Latar belakang putih untuk area konten utama. */
+            padding: 30px; /* Padding lebih banyak di dalam kotak konten. */
+            border-radius: 12px; /* Sudut membulat yang lebih besar untuk estetika. */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Bayangan yang lebih menonjol untuk kedalaman. */
+            margin-top: 20px; /* Margin atas agar tidak terlalu mepet ke atas. */
+            margin-bottom: 20px; /* Margin bawah. */
+        }
+
+        h2 {
+            text-align: center; /* Menengahkan judul utama. */
+            color: #2c3e50; /* Warna biru gelap untuk judul utama. */
+            margin-bottom: 30px; /* Jarak di bawah judul utama. */
+            border-bottom: 2px solid #3498db; /* Garis bawah biru untuk judul utama. */
+            padding-bottom: 12px; /* Padding di bawah garis bawah. */
+            font-size: 2em; /* Ukuran font lebih besar. */
+        }
+
+        h3 {
+            color: #34495e; /* Biru gelap sedikit lebih terang untuk subjudul. */
+            margin-top: 25px; /* Jarak di atas subjudul. */
+            margin-bottom: 15px; /* Jarak di bawah subjudul. */
+            font-size: 1.3em; /* Ukuran font subjudul. */
+            border-bottom: 1px dashed #aed6f1; /* Garis bawah putus-putus untuk subjudul. */
+            padding-bottom: 5px; /* Padding bawah subjudul. */
+        }
+
+        .input-group {
+            margin-bottom: 20px; /* Menambahkan spasi di bawah setiap grup kontrol input. */
+            padding: 18px; /* Padding di dalam grup input. */
+            border: 1px solid #dcdcdc; /* Border abu-abu muda untuk grup input. */
+            border-radius: 10px; /* Sudut membulat untuk grup input. */
+            background-color: #fdfdfd; /* Latar belakang sangat terang untuk grup input. */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Bayangan dalam untuk efek inset. */
+        }
+
+        label {
+            display: inline-block; /* Memungkinkan label berada di samping input pada baris yang sama. */
+            margin-right: 15px; /* Spasi antara label dan input. */
+            margin-bottom: 10px; /* Spasi di bawah label saat membungkus. */
+            font-weight: bold; /* Membuat label menjadi tebal. */
+            color: #555; /* Warna abu-abu gelap untuk label. */
+            white-space: nowrap; /* Mencegah label terpotong. */
+        }
+
+        input[type="number"] {
+            width: 70px; /* Mengatur lebar input angka. */
+            padding: 10px 12px; /* Menambahkan padding di dalam bidang input. */
+            margin: 5px 0; /* Margin vertikal untuk input. */
+            border: 1px solid #ccc; /* Border abu-abu muda untuk input. */
+            border-radius: 6px; /* Sudut membulat untuk input. */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transisi halus untuk efek fokus. */
+            font-size: 1em; /* Ukuran font input. */
+        }
+
+        input[type="number"]:focus {
+            border-color: #3498db; /* Border biru saat fokus. */
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); /* Bayangan biru lembut saat fokus. */
+            outline: none; /* Menghilangkan outline default. */
+        }
+
+        button {
+            background-color: #3498db; /* Latar belakang biru untuk tombol. */
+            color: white; /* Warna teks putih untuk tombol. */
+            padding: 12px 25px; /* Padding di dalam tombol. */
+            border: none; /* Tanpa border untuk tombol. */
+            border-radius: 6px; /* Sudut membulat untuk tombol. */
+            cursor: pointer; /* Mengubah kursor menjadi pointer saat hover. */
+            font-size: 1.05em; /* Ukuran font lebih besar untuk tombol. */
+            margin-right: 12px; /* Spasi antara tombol. */
+            margin-top: 15px; /* Spasi di atas tombol. */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Transisi halus untuk efek hover. */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Bayangan tombol. */
+        }
+
+        button:hover {
+            background-color: #2980b9; /* Biru lebih gelap saat hover. */
+            transform: translateY(-2px); /* Efek sedikit terangkat saat hover. */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Bayangan lebih besar saat hover. */
+        }
+
+        button:active {
+            background-color: #2471a3; /* Biru lebih gelap lagi saat diklik. */
+            transform: translateY(0); /* Mengatur ulang efek terangkat saat diklik. */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bayangan lebih kecil saat diklik. */
+        }
+
+        canvas {
+            display: block; /* Membuat kanvas menjadi elemen blok untuk mengontrol margin auto. */
+            border: 2px solid #aaddff; /* Border biru muda untuk kanvas. */
+            margin-top: 25px; /* Spasi lebih banyak di atas kanvas. */
+            background: #fdfefe; /* Latar belakang sangat terang untuk kanvas. */
+            border-radius: 10px; /* Sudut membulat untuk kanvas. */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Bayangan halus untuk kanvas. */
+            margin-left: auto; /* Menengahkan kanvas secara horizontal. */
+            margin-right: auto; /* Menengahkan kanvas secara horizontal. */
+        }
+
+        .output, .penjelasan-bawah {
+            margin-top: 30px; /* Spasi lebih banyak di atas bagian output dan penjelasan. */
+            background: #f9f9f9; /* Latar belakang abu-abu muda. */
+            padding: 22px; /* Padding lebih banyak. */
+            border: 1px solid #e0e0e0; /* Border lebih terang. */
+            border-radius: 10px; /* Sudut membulat. */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06); /* Bayangan lembut. */
+        }
+
+        .penjelasan-bawah {
+            background: #e6f3ff; /* Latar belakang biru lebih terang untuk penjelasan. */
+            border-color: #cce7ff; /* Warna border yang cocok. */
+        }
+
+        table {
+            border-collapse: collapse; /* Menggabungkan border tabel menjadi satu garis. */
+            width: 100%; /* Tabel mengambil lebar penuh dari kontainernya. */
+            margin-top: 18px; /* Spasi di atas tabel. */
+            background-color: #ffffff; /* Latar belakang putih untuk tabel. */
+            border-radius: 8px; /* Sudut membulat untuk tabel. */
+            overflow: hidden; /* Memastikan sudut membulat diterapkan dengan benar. */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Bayangan tabel. */
+        }
+
+        table, th, td {
+            border: 1px solid #e9e9e9; /* Border abu-abu sangat muda untuk sel tabel. */
+        }
+
+        th, td {
+            padding: 14px 10px; /* Padding lebih banyak di dalam sel tabel. */
+            text-align: center; /* Menengahkan teks di dalam sel. */
+        }
+
+        th {
+            background-color: #f2f2f2; /* Latar belakang abu-abu muda untuk header tabel. */
+            color: #444; /* Warna teks lebih gelap untuk header. */
+            font-weight: bold; /* Teks tebal untuk header. */
+            text-transform: uppercase; /* Mengubah teks header menjadi huruf besar. */
+            font-size: 0.9em; /* Ukuran font header sedikit lebih kecil. */
+        }
+
+        tr:nth-child(even) {
+            background-color: #fefefe; /* Zebra striping untuk baris tabel yang genap. */
+        }
+        
+        tr:hover {
+            background-color: #eef7ff; /* Warna latar belakang baris saat di-hover. */
+        }
+
+        ul {
+            list-style-type: disc; /* Poin-poin bullet disk default untuk daftar tidak berurutan. */
+            margin-left: 25px; /* Indentasi untuk item daftar. */
+            margin-bottom: 10px; /* Margin bawah daftar. */
+        }
+
+        li {
+            margin-bottom: 8px; /* Margin bawah setiap item daftar. */
+        }
+
+        li strong {
+            color: #0056b3; /* Biru gelap untuk teks tebal di item daftar. */
+        }
+
+        pre {
+            background-color: #f0f0f0; /* Latar belakang abu-abu muda untuk preformatted text (kode). */
+            padding: 15px; /* Padding di dalam blok pre. */
+            border-radius: 8px; /* Sudut membulat untuk blok pre. */
+            overflow-x: auto; /* Menambahkan scroll horizontal jika konten terlalu lebar. */
+            font-family: 'Consolas', 'Monaco', monospace; /* Monospaced font untuk kode. */
+            font-size: 0.95em; /* Ukuran font sedikit lebih besar untuk kode. */
+            color: #3a3a3a; /* Warna teks abu-abu gelap untuk kode. */
+            border: 1px solid #e8e8e8; /* Border ringan untuk blok pre. */
+            line-height: 1.5; /* Line height untuk kode. */
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 0 auto;"> <h2>Algoritma Viewing dan Clipping - Interaktif</h2> <div class="input-group"> <h3>Pengaturan Window (Jendela Pandang)</h3> <label>X Min: <input type="number" id="winXMin" value="150"></label> <label>Y Min: <input type="number" id="winYMin" value="100"></label><br> <label>X Max: <input type="number" id="winXMax" value="450"></label> <label>Y Max: <input type="number" id="winYMax" value="300"></label> </div>
+
+        <div class="input-group"> <h3>Tambahkan Garis untuk Clipping</h3> <label>Garis X1: <input type="number" id="lineX1" value="50"></label> <label>Garis Y1: <input type="number" id="lineY1" value="50"></label><br> <label>Garis X2: <input type="number" id="lineX2" value="550"></label> <label>Garis Y2: <input type="number" id="lineY2" value="350"></label><br> <button onclick="addLine()">Tambah Garis</button> <button onclick="clearLines()">Bersihkan Garis</button> </div>
+
+        <button onclick="drawViewingAndClipping()">Proyeksikan & Klip</button> <button onclick="resetAll()">Reset Semua</button> <canvas id="viewingClippingCanvas" width="600" height="400"></canvas> <div class="output"> <h3>Garis Asli dan Hasil Clipping</h3> <table id="linesTable"> <thead>
+                    <tr>
+                        <th>#</th><th>X1</th><th>Y1</th><th>X2</th><th>Y2</th> <th>Status</th><th>X1'</th><th>Y1'</th><th>X2'</th><th>Y2'</th> </tr>
+                </thead>
+                <tbody>
+                    </tbody> </table>
+        </div>
+
+        <div class="penjelasan-bawah"> <strong>Penjelasan Algoritma Viewing dan Clipping:</strong><br><br> Dalam grafika komputer, kita sering perlu menampilkan sebagian kecil dari "dunia" yang lebih besar pada layar yang terbatas. Ini melibatkan dua konsep utama: <ul>
+                <li><strong>Viewing Transformation (Transformasi Viewing):</strong> Ini adalah proses memetakan koordinat dari ruang dunia (tempat objek kita berada) ke koordinat perangkat (seperti piksel di kanvas). Tujuannya adalah untuk menyesuaikan skala dan posisi objek agar pas di dalam *viewport* (area tampilan di layar). Untuk contoh ini, kita akan memetakan koordinat dunia yang sama dengan koordinat kanvas untuk kesederhanaan, tetapi konsepnya tetap ada.</li> <li><strong>Clipping:</strong> Ini adalah proses membuang (memotong) bagian dari objek grafis yang berada di luar area yang ditentukan (disebut **window** atau **clipping window**). Tujuannya adalah untuk menghindari penggambaran yang tidak perlu dan memastikan hanya bagian yang terlihat yang dirender.</li> </ul>
+
+            <br>Kita akan menggunakan **Algoritma Cohen-Sutherland** untuk *Line Clipping*. Algoritma ini bekerja dengan membagi bidang menjadi 9 wilayah relatif terhadap *clipping window* dan menetapkan kode 4-bit (**OutCode**) untuk setiap titik berdasarkan posisinya: <pre>
+Bit 1 (LSB): LEFT   (x &lt; Xmin) Bit 2:       RIGHT  (x &gt; Xmax) Bit 3:       BOTTOM (y &lt; Ymin) Bit 4 (MSB): TOP    (y &gt; Ymax) </pre>
+            Contoh: Jika sebuah titik ada di kiri-bawah, OutCode-nya akan menjadi `BOTTOM | LEFT` (0101 biner, atau 5 desimal). Jika di dalam, OutCode adalah `0000`. Langkah-langkah Cohen-Sutherland: <ol>
+                <li><strong>Hitung OutCode:</strong> Hitung OutCode untuk kedua titik akhir garis (P1 dan P2).</li> <li><strong>Penerimaan Trivial:</strong> Jika (OutCode1 `OR` OutCode2) == `0000` (keduanya di dalam window), terima garis.</li> <li><strong>Penolakan Trivial:</strong> Jika (OutCode1 `AND` OutCode2) != `0000` (keduanya di luar di sisi yang sama, misal keduanya di kiri window), tolak garis.</li> <li><strong>Pemotongan (Clipping):</strong> Jika tidak ada dari kasus di atas, garis memotong jendela. <ul>
+                        <li>Pilih salah satu titik yang berada di luar (OutCode-nya bukan `0000`).</li> <li>Tentukan titik potong dengan salah satu sisi jendela (atas, bawah, kiri, kanan) berdasarkan OutCode-nya.</li> <li>Ganti titik yang di luar dengan titik potong baru.</li> <li>Ulangi proses (kembali ke langkah 1) dengan garis yang sudah diperbarui hingga garis diterima atau ditolak.</li> </ul>
+                </li>
+            </ol>
+            Ini adalah algoritma yang efisien untuk memotong garis. </div>
+
+        <script>
+            // Mendapatkan elemen canvas dari DOM
+            const canvas = document.getElementById("viewingClippingCanvas");
+            // Mendapatkan konteks gambar 2D dari canvas
+            const ctx = canvas.getContext("2d");
+
+            // Mendapatkan tbody dari tabel garis untuk menampilkan hasil
+            const linesTableBody = document.querySelector("#linesTable tbody");
+
+            // --- Konstanta OutCode untuk Algoritma Cohen-Sutherland ---
+            const INSIDE = 0;   // 0000 - Titik berada di dalam window
+            const LEFT = 1;     // 0001 - Titik berada di kiri window (x < Xmin)
+            const RIGHT = 2;    // 0010 - Titik berada di kanan window (x > Xmax)
+            const BOTTOM = 4;   // 0100 - Titik berada di bawah window (y < Ymin)
+            const TOP = 8;      // 1000 - Titik berada di atas window (y > Ymax)
+
+            // Array global untuk menyimpan objek garis yang akan diklip
+            let linesToClip = []; 
+
+            /**
+             * Menggambar sebuah titik (lingkaran kecil) pada kanvas.
+             * @param {number} x - Koordinat X titik.
+             * @param {number} y - Koordinat Y titik.
+             * @param {string} color - Warna titik (default: 'red').
+             * @param {number} radius - Radius titik (default: 3 piksel).
+             */
+            function drawPoint(x, y, color = 'red', radius = 3) {
+                ctx.beginPath(); // Memulai jalur gambar baru.
+                ctx.arc(x, y, radius, 0, Math.PI * 2); // Menggambar lingkaran penuh.
+                ctx.fillStyle = color; // Mengatur warna isian.
+                ctx.fill(); // Mengisi lingkaran dengan warna yang ditentukan.
+            }
+
+            /**
+             * Menggambar garis pada kanvas.
+             * @param {number} x1 - Koordinat X1 titik awal garis.
+             * @param {number} y1 - Koordinat Y1 titik awal garis.
+             * @param {number} x2 - Koordinat X2 titik akhir garis.
+             * @param {number} y2 - Koordinat Y2 titik akhir garis.
+             * @param {string} color - Warna garis (default: 'black').
+             * @param {number} width - Ketebalan garis (default: 1 piksel).
+             */
+            function drawLine(x1, y1, x2, y2, color = 'black', width = 1) {
+                ctx.beginPath(); // Memulai jalur gambar baru.
+                ctx.moveTo(x1, y1); // Memindahkan "pena" ke titik awal garis.
+                ctx.lineTo(x2, y2); // Menggambar garis ke titik akhir.
+                ctx.strokeStyle = color; // Mengatur warna stroke.
+                ctx.lineWidth = width; // Mengatur ketebalan garis.
+                ctx.stroke(); // Merender garis di kanvas.
+            }
+
+            /**
+             * Menggambar persegi panjang yang merepresentasikan clipping window.
+             * @param {number} xMin - Batas X minimum window.
+             * @param {number} yMin - Batas Y minimum window.
+             * @param {number} xMax - Batas X maksimum window.
+             * @param {number} yMax - Batas Y maksimum window.
+             * @param {string} color - Warna garis batas window (default: 'green').
+             */
+            function drawClippingWindow(xMin, yMin, xMax, yMax, color = 'green') {
+                ctx.strokeStyle = color; // Mengatur warna border window.
+                ctx.lineWidth = 2; // Mengatur ketebalan border window.
+                ctx.strokeRect(xMin, yMin, xMax - xMin, yMax - yMin); // Menggambar persegi panjang berongga.
+            }
+
+            /**
+             * Menghitung OutCode Cohen-Sutherland untuk sebuah titik (x, y)
+             * relatif terhadap clipping window yang diberikan.
+             * @param {number} x - Koordinat X titik.
+             * @param {number} y - Koordinat Y titik.
+             * @param {number} xMin - Batas X minimum window.
+             * @param {number} yMin - Batas Y minimum window.
+             * @param {number} xMax - Batas X maksimum window.
+             * @param {number} yMax - Batas Y maksimum window.
+             * @returns {number} OutCode 4-bit yang merepresentasikan posisi titik.
+             */
+            function computeOutCode(x, y, xMin, yMin, xMax, yMax) {
+                let code = INSIDE; // Inisialisasi OutCode sebagai 'INSIDE' (0000).
+
+                // Cek posisi horizontal
+                if (x < xMin) {      // Jika titik di kiri Xmin.
+                    code |= LEFT;    // Set bit LEFT (0001) menggunakan bitwise OR.
+                } else if (x > xMax) { // Jika titik di kanan Xmax.
+                    code |= RIGHT;   // Set bit RIGHT (0010).
+                }
+
+                // Cek posisi vertikal
+                if (y < yMin) {      // Jika titik di bawah Ymin.
+                    code |= BOTTOM;  // Set bit BOTTOM (0100).
+                } else if (y > yMax) { // Jika titik di atas Ymax.
+                    code |= TOP;     // Set bit TOP (1000).
+                }
+                return code; // Kembalikan OutCode yang sudah dihitung.
+            }
+
+            /**
+             * Mengklip garis menggunakan algoritma Cohen-Sutherland.
+             * Fungsi ini memodifikasi koordinat garis hingga diterima atau ditolak.
+             * @param {number} x1 - Koordinat X1 garis awal.
+             * @param {number} y1 - Koordinat Y1 garis awal.
+             * @param {number} x2 - Koordinat X2 garis awal.
+             * @param {number} y2 - Koordinat Y2 garis awal.
+             * @param {number} xMin - Batas X minimum window.
+             * @param {number} yMin - Batas Y minimum window.
+             * @param {number} xMax - Batas X maksimum window.
+             * @param {number} yMax - Batas Y maksimum window.
+             * @returns {Object|null} Objek {x1, y1, x2, y2} jika garis terlihat (setelah diklip),
+             * atau null jika garis sepenuhnya di luar window.
+             */
+            function cohenSutherlandClip(x1, y1, x2, y2, xMin, yMin, xMax, yMax) {
+                // Hitung OutCode awal untuk kedua titik akhir garis.
+                let outCode1 = computeOutCode(x1, y1, xMin, yMin, xMax, yMax);
+                let outCode2 = computeOutCode(x2, y2, xMin, yMin, xMax, yMax);
+
+                let accept = false; // Flag untuk menandai apakah garis diterima.
+
+                // Loop utama algoritma Cohen-Sutherland.
+                while (true) {
+                    if ((outCode1 === INSIDE) && (outCode2 === INSIDE)) { 
+                        // Kasus 1: Penerimaan Trivial.
+                        // Kedua titik berada di dalam window (OutCode keduanya 0000).
+                        accept = true; // Set flag accept menjadi true.
+                        break; // Keluar dari loop, garis diterima.
+                    } else if (outCode1 & outCode2) { 
+                        // Kasus 2: Penolakan Trivial.
+                        // Bitwise AND dari kedua OutCode tidak nol. Ini berarti kedua titik
+                        // berada di sisi yang sama di luar window (misal, keduanya di kiri).
+                        break; // Keluar dari loop, garis ditolak.
+                    } else { 
+                        // Kasus 3: Perlu Pemotongan (Clipping).
+                        // Garis memotong setidaknya satu batas window.
+                        
+                        // Pilih titik yang berada di luar window untuk diproses.
+                        // Jika outCode1 bukan INSIDE, gunakan outCode1, jika tidak, gunakan outCode2.
+                        let outCodeOutside = outCode1 !== INSIDE ? outCode1 : outCode2;
+                        let x = 0, y = 0; // Variabel untuk menyimpan titik potong.
+
+                        // Tentukan titik potong dengan batas window berdasarkan OutCodeOutside.
+                        // Urutan pengecekan (TOP, BOTTOM, RIGHT, LEFT) penting untuk efisiensi.
+                        if (outCodeOutside & TOP) { // Garis memotong sisi ATAS (y > yMax).
+                            // Gunakan persamaan garis y = yMax untuk mencari X potong (x = x1 + (x2 - x1) * (y_intersection - y1) / (y2 - y1)).
+                            x = x1 + (x2 - x1) * (yMax - y1) / (y2 - y1);
+                            y = yMax;
+                        } else if (outCodeOutside & BOTTOM) { // Garis memotong sisi BAWAH (y < yMin).
+                            // Gunakan persamaan garis y = yMin untuk mencari X potong.
+                            x = x1 + (x2 - x1) * (yMin - y1) / (y2 - y1);
+                            y = yMin;
+                        } else if (outCodeOutside & RIGHT) { // Garis memotong sisi KANAN (x > xMax).
+                            // Gunakan persamaan garis x = xMax untuk mencari Y potong.
+                            y = y1 + (y2 - y1) * (xMax - x1) / (x2 - x1);
+                            x = xMax;
+                        } else if (outCodeOutside & LEFT) { // Garis memotong sisi KIRI (x < xMin).
+                            // Gunakan persamaan garis x = xMin untuk mencari Y potong.
+                            y = y1 + (y2 - y1) * (xMin - x1) / (x2 - x1);
+                            x = xMin;
+                        }
+
+                        // Ganti titik yang berada di luar dengan titik potong yang baru dihitung.
+                        if (outCodeOutside === outCode1) {
+                            // Jika titik P1 yang di luar, perbarui P1.
+                            x1 = x;
+                            y1 = y;
+                            // Hitung ulang OutCode untuk P1 yang baru.
+                            outCode1 = computeOutCode(x1, y1, xMin, yMin, xMax, yMax);
+                        } else {
+                            // Jika titik P2 yang di luar, perbarui P2.
+                            x2 = x;
+                            y2 = y;
+                            // Hitung ulang OutCode untuk P2 yang baru.
+                            outCode2 = computeOutCode(x2, y2, xMin, yMin, xMax, yMax);
+                        }
+                    }
+                }
+
+                if (accept) {
+                    // Jika garis diterima, kembalikan koordinat garis yang sudah diklip.
+                    return { x1: x1, y1: y1, x2: x2, y2: y2 };
+                } else {
+                    // Jika garis ditolak, kembalikan null.
+                    return null; 
+                }
+            }
+
+            /**
+             * Menambahkan garis baru dari input ke array linesToClip
+             * dan memicu penggambaran ulang canvas.
+             */
+            function addLine() {
+                // Mengambil nilai koordinat dari input field dan mengubahnya ke float.
+                const x1 = parseFloat(document.getElementById('lineX1').value);
+                const y1 = parseFloat(document.getElementById('lineY1').value);
+                const x2 = parseFloat(document.getElementById('lineX2').value);
+                const y2 = parseFloat(document.getElementById('lineY2').value);
+
+                // Menambahkan objek garis baru ke array.
+                linesToClip.push({ x1, y1, x2, y2 });
+                // Memanggil fungsi utama untuk menggambar ulang canvas.
+                drawViewingAndClipping(); 
+            }
+
+            /**
+             * Menghapus semua garis dari array linesToClip
+             * dan memicu penggambaran ulang canvas.
+             */
+            function clearLines() {
+                linesToClip = []; // Mengosongkan array garis.
+                drawViewingAndClipping(); // Memanggil fungsi utama untuk menggambar ulang canvas.
+            }
+
+            /**
+             * Fungsi utama untuk menggambar clipping window, semua garis asli,
+             * dan semua garis yang sudah diklip, serta memperbarui tabel hasil.
+             */
+            function drawViewingAndClipping() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh canvas.
+
+                // Mendapatkan nilai batas window dari input field.
+                const winXMin = parseFloat(document.getElementById('winXMin').value);
+                const winYMin = parseFloat(document.getElementById('winYMin').value);
+                const winXMax = parseFloat(document.getElementById('winXMax').value);
+                const winYMax = parseFloat(document.getElementById('winYMax').value);
+
+                // Menggambar clipping window pada canvas.
+                drawClippingWindow(winXMin, winYMin, winXMax, winYMax);
+
+                linesTableBody.innerHTML = ''; // Mengosongkan isi tabel hasil sebelumnya.
+
+                // Iterasi setiap garis dalam array linesToClip.
+                linesToClip.forEach((line, index) => {
+                    // Membuat baris baru di tabel untuk garis asli.
+                    const originalRow = linesTableBody.insertRow();
+                    originalRow.insertCell().textContent = index; // Nomor garis.
+                    originalRow.insertCell().textContent = line.x1.toFixed(2); // X1 asli (dibulatkan 2 desimal).
+                    originalRow.insertCell().textContent = line.y1.toFixed(2); // Y1 asli (dibulatkan 2 desimal).
+                    originalRow.insertCell().textContent = line.x2.toFixed(2); // X2 asli (dibulatkan 2 desimal).
+                    originalRow.insertCell().textContent = line.y2.toFixed(2); // Y2 asli (dibulatkan 2 desimal).
+
+                    // Menggambar garis asli pada canvas dengan warna biru.
+                    drawLine(line.x1, line.y1, line.x2, line.y2, 'blue', 1);
+
+                    // Melakukan clipping pada garis menggunakan algoritma Cohen-Sutherland.
+                    const clippedLine = cohenSutherlandClip(line.x1, line.y1, line.x2, line.y2, winXMin, winYMin, winXMax, winYMax);
+
+                    if (clippedLine) {
+                        // Jika garis terlihat (setelah diklip).
+                        originalRow.insertCell().textContent = "Terlihat"; // Status garis.
+                        originalRow.insertCell().textContent = clippedLine.x1.toFixed(2); // X1' hasil klip.
+                        originalRow.insertCell().textContent = clippedLine.y1.toFixed(2); // Y1' hasil klip.
+                        originalRow.insertCell().textContent = clippedLine.x2.toFixed(2); // X2' hasil klip.
+                        originalRow.insertCell().textContent = clippedLine.y2.toFixed(2); // Y2' hasil klip.
+                        
+                        // Menggambar garis hasil klip pada canvas dengan warna merah dan lebih tebal.
+                        drawLine(clippedLine.x1, clippedLine.y1, clippedLine.x2, clippedLine.y2, 'red', 3);
+                    } else {
+                        // Jika garis sepenuhnya ditolak (tidak terlihat).
+                        originalRow.insertCell().textContent = "Ditolak"; // Status garis.
+                        originalRow.insertCell().textContent = "-"; // Tidak ada koordinat hasil klip.
+                        originalRow.insertCell().textContent = "-";
+                        originalRow.insertCell().textContent = "-";
+                        originalRow.insertCell().textContent = "-";
+                    }
+                });
+            }
+
+            /**
+             * Mengatur ulang semua input parameter window dan garis ke nilai default.
+             * Kemudian memicu penggambaran ulang canvas.
+             */
+            function resetAll() {
+                // Mengatur ulang nilai input window ke default.
+                document.getElementById('winXMin').value = 150;
+                document.getElementById('winYMin').value = 100;
+                document.getElementById('winXMax').value = 450;
+                document.getElementById('winYMax').value = 300;
+                
+                // Mengatur ulang nilai input garis baru ke default.
+                document.getElementById('lineX1').value = 50;
+                document.getElementById('lineY1').value = 50;
+                document.getElementById('lineX2').value = 550;
+                document.getElementById('lineY2').value = 350;
+
+                // Mengatur ulang daftar garis dengan beberapa contoh kasus.
+                linesToClip = [
+                    { x1: 50, y1: 50, x2: 550, y2: 350 }, // Garis memotong window.
+                    { x1: 100, y1: 150, x2: 200, y2: 250 }, // Garis sepenuhnya di dalam window.
+                    { x1: 0, y1: 200, x2: 100, y2: 200 }, // Garis di kiri window (sebagian/sepenuhnya di luar).
+                    { x1: 500, y1: 10, x2: 580, y2: 30 }, // Garis di kanan atas window (sebagian/sepenuhnya di luar).
+                    { x1: 200, y1: 0, x2: 200, y2: 80 },  // Garis di atas window (sebagian/sepenuhnya di luar).
+                    { x1: 10, y1: 10, x2: 20, y2: 20 } // Garis sangat kecil, sepenuhnya di luar.
+                ];
+                
+                // Memanggil fungsi utama untuk menggambar ulang canvas dengan data default.
+                drawViewingAndClipping();
+            }
+
+            // Memanggil fungsi resetAll() saat halaman dimuat pertama kali.
+            // Ini akan menginisialisasi tampilan dengan window dan beberapa garis contoh.
+            resetAll();
+        </script>
+    </div>
+</body>
+</html>

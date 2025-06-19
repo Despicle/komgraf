@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi RGB ke HSV Interaktif</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-group label {
+            display: inline-block;
+            width: 70px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .input-group input[type="range"] {
+            width: calc(100% - 150px);
+            vertical-align: middle;
+        }
+        .input-group span {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        .color-preview {
+            width: 25px;
+            height: 25px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .output-group {
+            margin-top: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        .output-group > div {
+            flex: 1;
+        }
+        canvas {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            background-color: #fff; /* Default background for pixel canvas */
+        }
+        #pixelCanvas {
+            width: 200px; /* Larger canvas for pixel visualization */
+            height: 200px;
+            border: 2px solid #000;
+            background-color: #fff;
+            image-rendering: pixelated; /* Ensures sharp pixel edges */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .penjelasan-bawah {
+            margin-top: 30px;
+            background: #e6f7ff;
+            padding: 20px;
+            border: 1px solid #b3e0ff;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        .penjelasan-bawah h3 {
+            color: #2a6496;
+            margin-top: 15px;
+        }
+        .penjelasan-bawah ol, .penjelasan-bawah ul {
+            margin-left: 20px;
+            padding-left: 0;
+        }
+        .penjelasan-bawah li {
+            margin-bottom: 8px;
+        }
+        pre {
+            background-color: #eee;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #333;
+        }
+        strong {
+            color: #0056b3;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px;">
+        <h1>Representasi Piksel & Konversi Warna RGB ke HSV</h1>
+
+        <div class="input-group">
+            <h2>Pilih Warna RGB</h2>
+            <p>Geser slider di bawah untuk memilih nilai Merah, Hijau, dan Biru (0-255).</p>
+            <div>
+                <span class="color-preview" style="background-color: red;"></span>
+                <label for="merah">Merah:</label>
+                <input type="range" id="merah" min="0" max="255" value="0">
+                <span id="merah-value">0</span>
+            </div>
+            <div>
+                <span class="color-preview" style="background-color: green;"></span>
+                <label for="hijau">Hijau:</label>
+                <input type="range" id="hijau" min="0" max="255" value="0">
+                <span id="hijau-value">0</span>
+            </div>
+            <div>
+                <span class="color-preview" style="background-color: blue;"></span>
+                <label for="biru">Biru:</label>
+                <input type="range" id="biru" min="0" max="255" value="0">
+                <span id="biru-value">0</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <h2>Simulasi Ukuran Piksel</h2>
+            <p>Geser slider untuk mengubah ukuran piksel yang ditampilkan pada kanvas simulasi.</p>
+            <div>
+                <label for="pixelSize">Ukuran Piksel:</label>
+                <input type="range" id="pixelSize" min="1" max="20" value="10">
+                <span id="pixelSize-value">10x10</span>
+            </div>
+            <canvas id="pixelCanvas" width="200" height="200"></canvas>
+        </div>
+
+        <div class="output-group">
+            <div>
+                <h3>Warna RGB Asli</h3>
+                <p><strong>R:</strong> <span id="outputR">0</span></p>
+                <p><strong>G:</strong> <span id="outputG">0</span></p>
+                <p><strong>B:</strong> <span id="outputB">0</span></p>
+            </div>
+            <canvas id="canvasRGB"></canvas>
+            <div>
+                <h3>Warna Konversi HSV</h3>
+                <p><strong>H:</strong> <span id="outputH">0</span>&deg;</p>
+                <p><strong>S:</strong> <span id="outputS">0</span>%</p>
+                <p><strong>V:</strong> <span id="outputV">0</span>%</p>
+            </div>
+            <canvas id="canvasHSV"></canvas>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <h2>Penjelasan Konsep</h2>
+            <p>Dalam grafika komputer dan pengolahan citra, warna pada layar direpresentasikan menggunakan model matematika. Dua model paling umum adalah **RGB** dan **HSV**.</p>
+
+            <h3>Algoritma Piksel dan Representasi Warna RGB</h3>
+            <p>Setiap gambar digital terdiri dari ribuan bahkan jutaan titik kecil yang disebut **piksel**. Setiap piksel adalah satu titik warna. Pada layar monitor, warna piksel biasanya ditentukan menggunakan model warna <strong class="highlight">RGB (Red, Green, Blue)</strong>.</p>
+            <ul>
+                <li>Setiap piksel menyimpan tiga nilai intensitas cahaya: satu untuk **Merah**, satu untuk **Hijau**, dan satu untuk **Biru**.</li>
+                <li>Masing-masing nilai ini berkisar dari <strong class="highlight">0 (tidak ada cahaya) hingga 255 (intensitas penuh)</strong>.</li>
+                <li>Warna yang kita lihat adalah hasil <strong class="highlight">penjumlahan aditif</strong> dari ketiga komponen ini. Misalnya, merah dan hijau menghasilkan kuning, sedangkan ketiga warna pada intensitas penuh menghasilkan putih.</li>
+            </ul>
+            <p><strong>Simulasi Ukuran Piksel:</strong></p>
+            <p>Pada layar sungguhan, piksel sangat kecil sehingga sulit dibedakan satu per satu. Namun, dalam simulasi ini, Anda dapat mengubah <strong class="highlight">ukuran visual satu "piksel"</strong> pada kanvas di atas. Ini membantu Anda memahami bahwa setiap piksel, terlepas dari ukurannya di layar, hanya memiliki satu warna RGB yang ditentukan.</p>
+            <p>Contoh:</p>
+            <ul>
+                <li><strong class="highlight">Merah Murni:</strong> RGB(255, 0, 0)</li>
+                <li><strong class="highlight">Hijau Murni:</strong> RGB(0, 255, 0)</li>
+                <li><strong class="highlight">Biru Murni:</strong> RGB(0, 0, 255)</li>
+                <li><strong class="highlight">Hitam:</strong> RGB(0, 0, 0)</li>
+                <li><strong class="highlight">Putih:</strong> RGB(255, 255, 255)</li>
+            </ul>
+
+            <h3>Algoritma Konversi RGB ke HSV</h3>
+            <p>Model warna <strong class="highlight">HSV (Hue, Saturation, Value)</strong> lebih mendekati cara manusia mempersepsikan warna, sehingga sering digunakan dalam aplikasi pengeditan gambar. HSV memisahkan karakteristik warna menjadi tiga komponen:</p>
+            <ul>
+                <li><strong class="highlight">Hue (Rona - H):</strong> Menentukan jenis warna itu sendiri (misalnya merah, kuning, hijau, biru). Diukur dalam derajat dari <strong class="highlight">0° hingga 360°</strong>.</li>
+                <li><strong class="highlight">Saturation (Saturasi/Kejenuhan - S):</strong> Menentukan kemurnian warna. Semakin tinggi saturasi, semakin murni warnanya (kurang abu-abu). Diukur dalam <strong class="highlight">persentase dari 0% (abu-abu) hingga 100% (warna murni)</strong>.</li>
+                <li><strong class="highlight">Value (Nilai/Kecerahan - V):</strong> Menentukan kecerahan atau kegelapan warna. Dari <strong class="highlight">0% (hitam penuh) hingga 100% (paling cerah)</strong>.</li>
+            </ul>
+
+            <p><strong>Langkah-langkah Konversi RGB (0-255) ke HSV:</strong></p>
+            <ol>
+                <li><strong>Normalisasi Nilai RGB:</strong>
+                    Ubah nilai R, G, B dari rentang [0, 255] ke rentang [0, 1].
+                    <pre>R' = R / 255
+G' = G / 255
+B' = B / 255</pre>
+                </li>
+                <li><strong>Tentukan Nilai Maksimum (Cmax) dan Minimum (Cmin):</strong>
+                    Cari nilai tertinggi dan terendah dari R', G', dan B', serta hitung selisihnya (Delta).
+                    <pre>Cmax = max(R', G', B')
+Cmin = min(R', G', B')
+Delta = Cmax - Cmin</pre>
+                </li>
+                <li><strong>Hitung Value (V):</strong>
+                    <pre>V = Cmax</pre>
+                    (Ini adalah komponen paling cerah dari warna)
+                </li>
+                <li><strong>Hitung Saturation (S):</strong>
+                    <pre>Jika Cmax = 0, maka S = 0 (warna hitam, tidak ada saturasi)
+Jika Cmax > 0, maka S = Delta / Cmax</pre>
+                    (Jika Delta = 0, warna juga abu-abu dan S = 0)
+                </li>
+                <li><strong>Hitung Hue (H):</strong>
+                    <pre>Jika Delta = 0, maka H = 0 (warna abu-abu, tidak ada rona)
+Jika Cmax = R', maka H = 60 * (((G' - B') / Delta) mod 6)
+Jika Cmax = G', maka H = 60 * (((B' - R') / Delta) + 2)
+Jika Cmax = B', maka H = 60 * (((R' - G') / Delta) + 4)
+Jika H < 0, maka H = H + 360 (pastikan H positif)</pre>
+                </li>
+                <li><strong>Format Output Akhir:</strong>
+                    Hue (H) dalam derajat (0-360), Saturation (S) dan Value (V) dalam persentase (0-100%).
+                </li>
+            </ol>
+
+            <h3>Contoh Perhitungan (Merah Murni: R=255, G=0, B=0)</h3>
+            <pre>
+<strong>1. Normalisasi:</strong>
+R' = 255 / 255 = 1
+G' = 0 / 255 = 0
+B' = 0 / 255 = 0
+
+<strong>2. Cmax, Cmin, Delta:</strong>
+Cmax = max(1, 0, 0) = 1
+Cmin = min(1, 0, 0) = 0
+Delta = Cmax - Cmin = 1 - 0 = 1
+
+<strong>3. Hitung V:</strong>
+V = Cmax = 1  =>  V (persen) = 1 * 100 = 100%
+
+<strong>4. Hitung S:</strong>
+Karena Cmax > 0, S = Delta / Cmax = 1 / 1 = 1  =>  S (persen) = 1 * 100 = 100%
+
+<strong>5. Hitung H:</strong>
+Karena Cmax = R', H = 60 * (((G' - B') / Delta) mod 6)
+H = 60 * (((0 - 0) / 1) mod 6)
+H = 0
+
+Jadi, warna RGB(255, 0, 0) adalah <strong>HSV(0°, 100%, 100%)</strong>.
+            </pre>
+        </div>
+
+        <script>
+            // Mendapatkan referensi elemen HTML untuk kontrol RGB
+            const merahSlider = document.getElementById("merah");
+            const hijauSlider = document.getElementById("hijau");
+            const biruSlider = document.getElementById("biru");
+
+            const merahValueSpan = document.getElementById("merah-value");
+            const hijauValueSpan = document.getElementById("hijau-value");
+            const biruValueSpan = document.getElementById("biru-value");
+
+            const outputR = document.getElementById("outputR");
+            const outputG = document.getElementById("outputG");
+            const outputB = document.getElementById("outputB");
+
+            const outputH = document.getElementById("outputH");
+            const outputS = document.getElementById("outputS");
+            const outputV = document.getElementById("outputV");
+
+            const canvasRGB = document.getElementById("canvasRGB");
+            const canvasHSV = document.getElementById("canvasHSV");
+
+            // Mendapatkan referensi elemen HTML untuk simulasi piksel
+            const pixelSizeSlider = document.getElementById("pixelSize");
+            const pixelSizeValueSpan = document.getElementById("pixelSize-value");
+            const pixelCanvas = document.getElementById("pixelCanvas");
+            const pixelCtx = pixelCanvas.getContext("2d");
+
+            // Fungsi untuk mengonversi HSV ke RGB (untuk menampilkan warna HSV pada canvas)
+            function hsvToRgb(h, s, v) {
+                h /= 360; // Normalisasi H ke [0, 1]
+                s /= 100; // Normalisasi S ke [0, 1]
+                v /= 100; // Normalisasi V ke [0, 1]
+
+                let r, g, b;
+
+                const i = Math.floor(h * 6);
+                const f = h * 6 - i;
+                const p = v * (1 - s);
+                const q = v * (1 - f * s);
+                const t = v * (1 - (1 - f) * s);
+
+                switch (i % 6) {
+                    case 0: r = v; g = t; b = p; break;
+                    case 1: r = q; g = v; b = p; break;
+                    case 2: r = p; g = v; b = t; break;
+                    case 3: r = p; g = q; b = v; break;
+                    case 4: r = t; g = p; b = v; break;
+                    case 5: r = v; g = p; b = q; break;
+                }
+                return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+            }
+
+            // Fungsi untuk menggambar piksel pada canvas simulasi
+            function gambarPixel(r, g, b, pixelDimension) {
+                pixelCtx.clearRect(0, 0, pixelCanvas.width, pixelCanvas.height); // Bersihkan canvas
+
+                const totalPixels = pixelDimension * pixelDimension;
+                const pixelWidth = pixelCanvas.width / pixelDimension;
+                const pixelHeight = pixelCanvas.height / pixelDimension;
+
+                pixelCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+
+                for (let i = 0; i < pixelDimension; i++) {
+                    for (let j = 0; j < pixelDimension; j++) {
+                        pixelCtx.fillRect(j * pixelWidth, i * pixelHeight, pixelWidth, pixelHeight);
+                        // Opsional: Gambar garis piksel untuk tampilan lebih jelas
+                        pixelCtx.strokeStyle = '#ccc'; // Warna garis antar piksel
+                        pixelCtx.lineWidth = 0.5;
+                        pixelCtx.strokeRect(j * pixelWidth, i * pixelHeight, pixelWidth, pixelHeight);
+                    }
+                }
+            }
+
+            // Fungsi utama untuk memperbarui tampilan berdasarkan nilai slider
+            function updateKonversiWarna() {
+                // Ambil nilai RGB dari slider
+                let r = parseInt(merahSlider.value);
+                let g = parseInt(hijauSlider.value);
+                let b = parseInt(biruSlider.value);
+                let pixelDimension = parseInt(pixelSizeSlider.value);
+
+                // --- Update Tampilan RGB ---
+                merahValueSpan.textContent = r;
+                hijauValueSpan.textContent = g;
+                biruValueSpan.textContent = b;
+
+                outputR.textContent = r;
+                outputG.textContent = g;
+                outputB.textContent = b;
+
+                canvasRGB.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+                // --- Update Simulasi Piksel ---
+                pixelSizeValueSpan.textContent = `${pixelDimension}x${pixelDimension}`;
+                gambarPixel(r, g, b, pixelDimension);
+
+                // --- Proses Konversi RGB ke HSV ---
+                let r1 = r / 255;
+                let g1 = g / 255;
+                let b1 = b / 255;
+
+                const cmax = Math.max(r1, g1, b1);
+                const cmin = Math.min(r1, g1, b1);
+                const delta = cmax - cmin;
+
+                let h = 0;
+                let s = 0;
+                let v = cmax;
+
+                if (delta === 0) {
+                    h = 0;
+                } else {
+                    switch (cmax) {
+                        case r1:
+                            h = 60 * (((g1 - b1) / delta) % 6);
+                            break;
+                        case g1:
+                            h = 60 * (((b1 - r1) / delta) + 2);
+                            break;
+                        case b1:
+                            h = 60 * (((r1 - g1) / delta) + 4);
+                            break;
+                    }
+                    if (h < 0) {
+                        h += 360;
+                    }
+                }
+
+                if (cmax === 0) {
+                    s = 0;
+                } else {
+                    s = delta / cmax;
+                }
+
+                s = parseFloat((s * 100).toFixed(2));
+                v = parseFloat((v * 100).toFixed(2));
+                h = parseFloat(h.toFixed(2));
+
+                // --- Update Tampilan HSV ---
+                outputH.textContent = h;
+                outputS.textContent = s;
+                outputV.textContent = v;
+
+                const rgbForCanvasHSV = hsvToRgb(h, s, v);
+                canvasHSV.style.backgroundColor = `rgb(${rgbForCanvasHSV[0]}, ${rgbForCanvasHSV[1]}, ${rgbForCanvasHSV[2]})`;
+            }
+
+            // Panggil fungsi saat halaman dimuat pertama kali untuk inisialisasi
+            updateKonversiWarna();
+
+            // Tambahkan event listener ke setiap slider
+            merahSlider.addEventListener('input', updateKonversiWarna);
+            hijauSlider.addEventListener('input', updateKonversiWarna);
+            biruSlider.addEventListener('input', updateKonversiWarna);
+            pixelSizeSlider.addEventListener('input', updateKonversiWarna); // Event listener untuk slider ukuran piksel
+        </script>
+    </div>
+</body>
+</html>

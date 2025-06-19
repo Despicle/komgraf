@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Algoritma Transformasi Geometri (Pencerminan & Shear)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        h2, h3 {
+            color: #0056b3;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            width: 70px;
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        canvas {
+            border: 2px solid #000;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9e9e9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .input-group label {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output, .penjelasan-bawah {
+            margin-top: 25px;
+            background: #ffffff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .penjelasan-bawah {
+            background: #e0f7fa;
+            border-color: #b2ebf2;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #c0c0c0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap; /* Memastikan teks wrap */
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .section-divider {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 0 auto;">
+        <h1>Simulasi Transformasi Geometri Interaktif</h1>
+
+        <hr class="section-divider">
+        <h2>Algoritma Pencerminan (Mirror)</h2>
+
+        <div class="input-group">
+            <h3>Pengaturan Objek (Persegi Panjang)</h3>
+            <label>Titik Awal X: <input type="number" id="mirrorObjX" value="100"></label>
+            <label>Titik Awal Y: <input type="number" id="mirrorObjY" value="100"></label><br>
+            <label>Lebar: <input type="number" id="mirrorObjWidth" value="80"></label>
+            <label>Tinggi: <input type="number" id="mirrorObjHeight" value="60"></label>
+        </div>
+
+        <div class="input-group">
+            <h3>Pencerminan Terhadap</h3>
+            <label>
+                <input type="radio" name="mirrorAxis" value="x" checked onchange="drawMirrorObject()"> Sumbu X (Horizontal)
+            </label>
+            <label>
+                <input type="radio" name="mirrorAxis" value="y" onchange="drawMirrorObject()"> Sumbu Y (Vertikal)
+            </label><br>
+            <button onclick="applyMirrorTransformation()">Terapkan Pencerminan</button>
+            <button onclick="resetMirrorObject()">Reset Objek (Pencerminan)</button>
+            <button onclick="drawMirrorObject()">Gambar Objek Saat Ini (Pencerminan)</button>
+        </div>
+
+        <canvas id="mirrorCanvas" width="600" height="400"></canvas>
+
+        <div class="output">
+            <h3>Koordinat Objek Setelah Pencerminan</h3>
+            <table id="mirrorCurrentPointsTable">
+                <thead><tr><th>#</th><th>X</th><th>Y</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Pencerminan (Mirror):</strong><br><br>
+            Pencerminan adalah transformasi yang membalik objek melintasi sebuah garis (sumbu pencerminan). Objek hasil pencerminan akan menjadi bayangan cermin dari objek asli.<br><br>
+            Dalam simulasi ini, pencerminan dilakukan terhadap garis khayalan di tengah kanvas (untuk sumbu X, garisnya horizontal di tengah; untuk sumbu Y, garisnya vertikal di tengah).
+            <br><br>Rumus umum pencerminan untuk titik $(X, Y)$:
+            <ul>
+                <li><strong>Terhadap Sumbu X (Horizontal, misal $y = Y_{tengah\_kanvas}$):</strong>
+                    <pre>
+X' = X
+Y' = 2 * Y_tengah_kanvas - Y
+                    </pre>
+                </li>
+                <li><strong>Terhadap Sumbu Y (Vertikal, misal $x = X_{tengah\_kanvas}$):</strong>
+                    <pre>
+X' = 2 * X_tengah_kanvas - X
+Y' = Y
+                    </pre>
+                </li>
+            </ul>
+        </div>
+
+        <hr class="section-divider">
+        <h2>Algoritma Shear (Geser)</h2>
+
+        <div class="input-group">
+            <h3>Pengaturan Objek (Persegi Panjang)</h3>
+            <label>Titik Awal X: <input type="number" id="shearObjX" value="100"></label>
+            <label>Titik Awal Y: <input type="number" id="shearObjY" value="100"></label><br>
+            <label>Lebar: <input type="number" id="shearObjWidth" value="80"></label>
+            <label>Tinggi: <input type="number" id="shearObjHeight" value="60"></label>
+        </div>
+
+        <div class="input-group">
+            <h3>Faktor Shear</h3>
+            <label>Faktor Shear X (Sx): <input type="number" step="0.1" id="shearFactorX" value="0.2"></label><br>
+            <label>Faktor Shear Y (Sy): <input type="number" step="0.1" id="shearFactorY" value="0.0"></label><br>
+            <button onclick="applyShearTransformation()">Terapkan Shear</button>
+            <button onclick="resetShearObject()">Reset Objek (Shear)</button>
+            <button onclick="drawShearObject()">Gambar Objek Saat Ini (Shear)</button>
+        </div>
+
+        <canvas id="shearCanvas" width="600" height="400"></canvas>
+
+        <div class="output">
+            <h3>Koordinat Objek Setelah Shear</h3>
+            <table id="shearCurrentPointsTable">
+                <thead><tr><th>#</th><th>X</th><th>Y</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Shear (Geser):</strong><br><br>
+            Shear (geser) adalah transformasi yang memiringkan objek sepanjang sumbu tertentu. Ini menyebabkan salah satu koordinat titik objek bergeser sebanding dengan koordinat lainnya, menciptakan efek "miring" atau "tertarik".
+            <br><br>Rumus umum shear untuk titik $(X, Y)$:
+            <ul>
+                <li><strong>Shear Horizontal (dipengaruhi oleh Y, terhadap sumbu X):</strong>
+                    <pre>
+X' = X + S_x * Y
+Y' = Y
+                    </pre>
+                    (Objek miring ke samping. $S_x$ adalah faktor shear X.)
+                </li>
+                <li><strong>Shear Vertikal (dipengaruhi oleh X, terhadap sumbu Y):</strong>
+                    <pre>
+X' = X
+Y' = Y + S_y * X
+                    </pre>
+                    (Objek miring ke atas/bawah. $S_y$ adalah faktor shear Y.)
+                </li>
+            </ul>
+            Dalam implementasi ini, shear dilakukan relatif terhadap titik asal (0,0) kanvas.
+        </div>
+    </div>
+
+    <script>
+        // --- Bagian JavaScript untuk Algoritma Pencerminan ---
+        const mirrorCanvas = document.getElementById("mirrorCanvas");
+        const mirrorCtx = mirrorCanvas.getContext("2d");
+        const mirrorCurrentPointsTableBody = document.querySelector("#mirrorCurrentPointsTable tbody");
+
+        let mirrorOriginalObjectPoints = []; // Menyimpan titik-titik objek asli
+        let mirrorCurrentObjectPoints = []; // Menyimpan titik-titik objek setelah transformasi
+
+        /**
+         * Menggambar sebuah titik pada kanvas pencerminan.
+         */
+        function drawMirrorPoint(x, y, color = 'red', radius = 3) {
+            mirrorCtx.beginPath();
+            mirrorCtx.arc(x, y, radius, 0, Math.PI * 2);
+            mirrorCtx.fillStyle = color;
+            mirrorCtx.fill();
+        }
+
+        /**
+         * Menggambar bentuk persegi panjang pada kanvas pencerminan dari kumpulan titik-titiknya.
+         */
+        function drawMirrorShape(points, strokeColor = 'blue', fillColor = 'transparent') {
+            if (points.length === 0) return;
+
+            mirrorCtx.beginPath();
+            mirrorCtx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                mirrorCtx.lineTo(points[i].x, points[i].y);
+            }
+            mirrorCtx.closePath();
+
+            if (fillColor !== 'transparent') {
+                mirrorCtx.fillStyle = fillColor;
+                mirrorCtx.fill();
+            }
+            mirrorCtx.strokeStyle = strokeColor;
+            mirrorCtx.lineWidth = 2;
+            mirrorCtx.stroke();
+
+            points.forEach(p => drawMirrorPoint(p.x, p.y, 'red', 4));
+        }
+
+        /**
+         * Menginisialisasi atau mengatur ulang titik-titik objek pencerminan ke posisi dan ukuran default.
+         */
+        function resetMirrorObject() {
+            const x = parseFloat(document.getElementById('mirrorObjX').value);
+            const y = parseFloat(document.getElementById('mirrorObjY').value);
+            const width = parseFloat(document.getElementById('mirrorObjWidth').value);
+            const height = parseFloat(document.getElementById('mirrorObjHeight').value);
+
+            mirrorOriginalObjectPoints = [
+                { x: x, y: y },
+                { x: x + width, y: y },
+                { x: x + width, y: y + height },
+                { x: x, y: y + height }
+            ];
+            // Membuat salinan mendalam agar objek asli tidak ikut berubah
+            mirrorCurrentObjectPoints = JSON.parse(JSON.stringify(mirrorOriginalObjectPoints));
+
+            // Set radio button ke default
+            document.querySelector('input[name="mirrorAxis"][value="x"]').checked = true;
+
+            drawMirrorObject();
+        }
+
+        /**
+         * Menggambar objek saat ini pada kanvas pencerminan dan garis sumbu pencerminan.
+         */
+        function drawMirrorObject() {
+            mirrorCtx.clearRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
+
+            // Gambar objek yang sedang aktif
+            drawMirrorShape(mirrorCurrentObjectPoints);
+
+            // Gambar sumbu pencerminan
+            const mirrorAxis = document.querySelector('input[name="mirrorAxis"]:checked').value;
+            mirrorCtx.strokeStyle = 'green';
+            mirrorCtx.setLineDash([5, 5]); // Garis putus-putus
+            mirrorCtx.beginPath();
+            if (mirrorAxis === 'x') {
+                // Sumbu X di tengah canvas (horizontal)
+                const centerY = mirrorCanvas.height / 2;
+                mirrorCtx.moveTo(0, centerY);
+                mirrorCtx.lineTo(mirrorCanvas.width, centerY);
+                mirrorCtx.fillText("Sumbu X Cermin", 5, centerY - 5);
+            } else {
+                // Sumbu Y di tengah canvas (vertikal)
+                const centerX = mirrorCanvas.width / 2;
+                mirrorCtx.moveTo(centerX, 0);
+                mirrorCtx.lineTo(centerX, mirrorCanvas.height);
+                mirrorCtx.fillText("Sumbu Y Cermin", centerX + 5, 15);
+            }
+            mirrorCtx.stroke();
+            mirrorCtx.setLineDash([]); // Reset garis putus-putus
+
+            updateMirrorPointsTable();
+        }
+
+        /**
+         * Menerapkan transformasi pencerminan ke objek saat ini.
+         */
+        function applyMirrorTransformation() {
+            const mirrorAxis = document.querySelector('input[name="mirrorAxis"]:checked').value;
+
+            // Tentukan titik tengah kanvas sebagai sumbu cermin
+            const centerX = mirrorCanvas.width / 2;
+            const centerY = mirrorCanvas.height / 2;
+
+            mirrorCurrentObjectPoints = mirrorCurrentObjectPoints.map(p => {
+                let newX = p.x;
+                let newY = p.y;
+
+                if (mirrorAxis === 'x') {
+                    // Pencerminan terhadap sumbu X (garis horizontal di centerY)
+                    // Y' = Y_cermin + (Y_cermin - Y) = 2*Y_cermin - Y
+                    newY = 2 * centerY - p.y;
+                } else { // mirrorAxis === 'y'
+                    // Pencerminan terhadap sumbu Y (garis vertikal di centerX)
+                    // X' = X_cermin + (X_cermin - X) = 2*X_cermin - X
+                    newX = 2 * centerX - p.x;
+                }
+                return { x: newX, y: newY };
+            });
+
+            drawMirrorObject();
+        }
+
+        /**
+         * Memperbarui tampilan tabel koordinat objek pencerminan saat ini.
+         */
+        function updateMirrorPointsTable() {
+            mirrorCurrentPointsTableBody.innerHTML = '';
+            mirrorCurrentObjectPoints.forEach((p, index) => {
+                const row = mirrorCurrentPointsTableBody.insertRow();
+                row.insertCell().textContent = index;
+                row.insertCell().textContent = p.x.toFixed(2);
+                row.insertCell().textContent = p.y.toFixed(2);
+            });
+        }
+
+        // --- Bagian JavaScript untuk Algoritma Shear ---
+        const shearCanvas = document.getElementById("shearCanvas");
+        const shearCtx = shearCanvas.getContext("2d");
+        const shearCurrentPointsTableBody = document.querySelector("#shearCurrentPointsTable tbody");
+
+        let shearOriginalObjectPoints = []; // Menyimpan titik-titik objek asli
+        let shearCurrentObjectPoints = []; // Menyimpan titik-titik objek setelah transformasi
+
+        /**
+         * Menggambar sebuah titik pada kanvas shear.
+         */
+        function drawShearPoint(x, y, color = 'red', radius = 3) {
+            shearCtx.beginPath();
+            shearCtx.arc(x, y, radius, 0, Math.PI * 2);
+            shearCtx.fillStyle = color;
+            shearCtx.fill();
+        }
+
+        /**
+         * Menggambar bentuk persegi panjang pada kanvas shear dari kumpulan titik-titiknya.
+         */
+        function drawShearShape(points, strokeColor = 'blue', fillColor = 'transparent') {
+            if (points.length === 0) return;
+
+            shearCtx.beginPath();
+            shearCtx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                shearCtx.lineTo(points[i].x, points[i].y);
+            }
+            shearCtx.closePath();
+
+            if (fillColor !== 'transparent') {
+                shearCtx.fillStyle = fillColor;
+                shearCtx.fill();
+            }
+            shearCtx.strokeStyle = strokeColor;
+            shearCtx.lineWidth = 2;
+            shearCtx.stroke();
+
+            points.forEach(p => drawShearPoint(p.x, p.y, 'red', 4));
+        }
+
+        /**
+         * Menginisialisasi atau mengatur ulang titik-titik objek shear ke posisi dan ukuran default.
+         */
+        function resetShearObject() {
+            const x = parseFloat(document.getElementById('shearObjX').value);
+            const y = parseFloat(document.getElementById('shearObjY').value);
+            const width = parseFloat(document.getElementById('shearObjWidth').value);
+            const height = parseFloat(document.getElementById('shearObjHeight').value);
+
+            shearOriginalObjectPoints = [
+                { x: x, y: y },
+                { x: x + width, y: y },
+                { x: x + width, y: y + height },
+                { x: x, y: y + height }
+            ];
+            shearCurrentObjectPoints = JSON.parse(JSON.stringify(shearOriginalObjectPoints));
+
+            document.getElementById('shearFactorX').value = 0.2;
+            document.getElementById('shearFactorY').value = 0.0;
+
+            drawShearObject();
+        }
+
+        /**
+         * Menggambar objek saat ini pada kanvas shear.
+         */
+        function drawShearObject() {
+            shearCtx.clearRect(0, 0, shearCanvas.width, shearCanvas.height);
+            drawShearShape(shearCurrentObjectPoints);
+            updateShearPointsTable();
+        }
+
+        /**
+         * Menerapkan transformasi shear ke objek saat ini.
+         */
+        function applyShearTransformation() {
+            const shearFactorX = parseFloat(document.getElementById('shearFactorX').value);
+            const shearFactorY = parseFloat(document.getElementById('shearFactorY').value);
+
+            shearCurrentObjectPoints = shearCurrentObjectPoints.map(p => {
+                const newX = p.x + shearFactorX * p.y; // Shear horizontal (X dipengaruhi Y)
+                const newY = p.y + shearFactorY * p.x; // Shear vertical (Y dipengaruhi X)
+                return { x: newX, y: newY };
+            });
+
+            drawShearObject();
+        }
+
+        /**
+         * Memperbarui tampilan tabel koordinat objek shear saat ini.
+         */
+        function updateShearPointsTable() {
+            shearCurrentPointsTableBody.innerHTML = '';
+            shearCurrentObjectPoints.forEach((p, index) => {
+                const row = shearCurrentPointsTableBody.insertRow();
+                row.insertCell().textContent = index;
+                row.insertCell().textContent = p.x.toFixed(2);
+                row.insertCell().textContent = p.y.toFixed(2);
+            });
+        }
+
+        // --- Inisialisasi Kedua Simulasi Saat Halaman Dimuat ---
+        resetMirrorObject();
+        resetShearObject();
+    </script>
+</body>
+</html>

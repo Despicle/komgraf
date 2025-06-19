@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kurva Bezier Interaktif</title>
+    <style>
+        /* Gaya dasar untuk body, mengatur font dan padding */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4; /* Warna latar belakang body */
+            color: #333; /* Warna teks utama */
+        }
+        /* Gaya untuk elemen input number */
+        input[type="number"] {
+            width: 70px; /* Lebar input */
+            margin: 5px; /* Margin di sekitar input */
+            padding: 8px; /* Padding di dalam input */
+            border: 1px solid #ccc; /* Border input */
+            border-radius: 4px; /* Sudut membulat */
+            box-sizing: border-box; /* Memastikan padding dan border termasuk dalam lebar */
+        }
+        /* Gaya untuk elemen canvas */
+        canvas {
+            border: 2px solid #000; /* Border canvas */
+            margin-top: 20px; /* Margin atas canvas */
+            background-color: #fff; /* Latar belakang canvas putih */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Bayangan untuk canvas */
+        }
+        /* Gaya untuk grup input */
+        .input-group {
+            margin-bottom: 20px; /* Margin bawah grup input */
+            padding: 15px; /* Padding di dalam grup input */
+            background: #e9e9e9; /* Warna latar belakang grup input */
+            border-radius: 8px; /* Sudut membulat */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan */
+        }
+        .input-group label {
+            display: inline-block; /* Membuat label sejajar dengan input */
+            margin-right: 15px; /* Margin kanan label */
+            margin-bottom: 10px; /* Margin bawah untuk baris label */
+            font-weight: bold; /* Teks label tebal */
+        }
+        /* Gaya untuk tombol */
+        button {
+            padding: 10px 20px; /* Padding tombol */
+            background-color: #007bff; /* Warna latar tombol */
+            color: white; /* Warna teks tombol */
+            border: none; /* Tanpa border */
+            border-radius: 5px; /* Sudut membulat */
+            cursor: pointer; /* Kursor pointer saat hover */
+            font-size: 16px; /* Ukuran font tombol */
+            transition: background-color 0.3s ease; /* Transisi halus saat hover */
+        }
+        button:hover {
+            background-color: #0056b3; /* Warna latar tombol saat hover */
+        }
+        /* Gaya untuk bagian output dan penjelasan */
+        .output, .penjelasan-bawah {
+            margin-top: 25px; /* Margin atas */
+            background: #ffffff; /* Latar belakang putih */
+            padding: 20px; /* Padding */
+            border: 1px solid #ddd; /* Border */
+            border-radius: 8px; /* Sudut membulat */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan */
+        }
+        .penjelasan-bawah {
+            background: #e0f7fa; /* Warna latar belakang penjelasan berbeda */
+            border-color: #b2ebf2; /* Warna border berbeda */
+        }
+        /* Gaya untuk tabel */
+        table {
+            border-collapse: collapse; /* Menggabungkan border sel */
+            width: 100%; /* Lebar tabel 100% */
+            margin-top: 20px; /* Margin atas tabel */
+        }
+        table, th, td {
+            border: 1px solid #c0c0c0; /* Border sel dan tabel */
+        }
+        th, td {
+            padding: 10px; /* Padding sel */
+            text-align: center; /* Teks rata tengah */
+        }
+        th {
+            background-color: #f2f2f2; /* Latar belakang header tabel */
+            font-weight: bold; /* Teks header tebal */
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Warna latar sel genap */
+        }
+        pre {
+            background-color: #eee; /* Latar belakang untuk blok kode */
+            padding: 10px; /* Padding untuk blok kode */
+            border-radius: 4px; /* Sudut membulat */
+            overflow-x: auto; /* Scroll horizontal jika konten terlalu lebar */
+        }
+        ul {
+            list-style-type: disc; /* Jenis bullet point */
+            margin-left: 20px; /* Indentasi daftar */
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 0 auto;">
+        <h2>Kurva Bezier - Interaktif</h2>
+
+        <div class="input-group">
+            <label>Titik Kontrol (P0):
+                <input type="number" id="x0" value="50" oninput="hitungKurva()">
+                <input type="number" id="y0" value="300" oninput="hitungKurva()">
+            </label><br>
+            <label>Titik Kontrol (P1):
+                <input type="number" id="x1" value="150" oninput="hitungKurva()">
+                <input type="number" id="y1" value="100" oninput="hitungKurva()">
+            </label><br>
+            <label>Titik Kontrol (P2):
+                <input type="number" id="x2" value="300" oninput="hitungKurva()">
+                <input type="number" id="y2" value="100" oninput="hitungKurva()">
+            </label><br>
+            <label>Titik Kontrol (P3):
+                <input type="number" id="x3" value="400" oninput="hitungKurva()">
+                <input type="number" id="y3" value="300" oninput="hitungKurva()">
+            </label><br>
+            <label>Δt:
+                <input type="number" step="0.01" id="dt" value="0.05" oninput="hitungKurva()">
+            </label>
+            <button onclick="hitungKurva()">Perbarui Kurva</button>
+        </div>
+
+        <canvas id="bezierCanvas" width="600" height="400"></canvas>
+
+        <div class="output" id="outputMath">
+            <strong>Jumlah titik yang dihitung: </strong><span id="jumlahTitik"></span>
+            <table id="tabelHasil">
+                <thead>
+                    <tr><th>t</th><th>X(t)</th><th>Y(t)</th></tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah" id="penjelasan">
+            <strong>Contoh Perhitungan Detail (misalnya t = 0.5):</strong><br><br>
+            Menggunakan rumus Bezier Kubik (derajat 3):
+            <pre>
+B(t) = (1−t)^3 * P0
+     + 3(1−t)^2 * t * P1
+     + 3(1−t) * t^2 * P2
+     + t^3 * P3
+            </pre>
+            Di mana:
+            <ul>
+                <li>$P_0$: Titik awal kurva</li>
+                <li>$P_1, P_2$: Titik kontrol yang menentukan bentuk kurva</li>
+                <li>$P_3$: Titik akhir kurva</li>
+                <li>$t$: Parameter yang bervariasi dari 0 hingga 1.</li>
+            </ul>
+            Misal t = 0.5 dan menggunakan titik kontrol awal:
+            <ul>
+                <li>P0 = (50, 300)</li>
+                <li>P1 = (150, 100)</li>
+                <li>P2 = (300, 100)</li>
+                <li>P3 = (400, 300)</li>
+            </ul>
+
+            Maka langkah perhitungan untuk koordinat X(t):
+            <pre>
+X(0.5) = (1-0.5)^3 * 50
+       + 3*(1-0.5)^2 * 0.5 * 150
+       + 3*(1-0.5) * 0.5^2 * 300
+       + 0.5^3 * 400
+
+X(0.5) = (0.5)^3 * 50
+       + 3*(0.5)^2 * 0.5 * 150
+       + 3*0.5 * (0.5)^2 * 300
+       + (0.5)^3 * 400
+
+X(0.5) = 0.125 * 50
+       + 3 * 0.25 * 0.5 * 150
+       + 3 * 0.5 * 0.25 * 300
+       + 0.125 * 400
+
+X(0.5) = 6.25 + 56.25 + 112.5 + 50
+X(0.5) = 225
+            </pre>
+
+            Dan untuk koordinat Y(t):
+            <pre>
+Y(0.5) = (1-0.5)^3 * 300
+       + 3*(1-0.5)^2 * 0.5 * 100
+       + 3*(1-0.5) * 0.5^2 * 100
+       + 0.5^3 * 300
+
+Y(0.5) = (0.5)^3 * 300
+       + 3*(0.5)^2 * 0.5 * 100
+       + 3*0.5 * (0.5)^2 * 100
+       + (0.5)^3 * 300
+
+Y(0.5) = 0.125 * 300
+       + 3 * 0.25 * 0.5 * 100
+       + 3 * 0.5 * 0.25 * 100
+       + 0.125 * 300
+
+Y(0.5) = 37.5 + 37.5 + 37.5 + 37.5
+Y(0.5) = 150
+            </pre>
+
+            Sehingga titik pada kurva Bezier di $t = 0.5$ adalah <strong>(225, 150)</strong>.
+        </div>
+
+        <script>
+            /**
+             * Fungsi hitungKurva() akan menggambar kurva Bezier pada canvas
+             * dan menampilkan perhitungan titik-titik kurva dalam tabel.
+             */
+            function hitungKurva() {
+                // Mendapatkan elemen canvas dan konteks gambar 2D-nya
+                const canvas = document.getElementById("bezierCanvas");
+                const ctx = canvas.getContext("2d");
+
+                // Mengosongkan seluruh area canvas sebelum menggambar ulang
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Mendapatkan nilai titik kontrol dari input pengguna dan mengubahnya ke float
+                const x0 = parseFloat(document.getElementById("x0").value);
+                const y0 = parseFloat(document.getElementById("y0").value);
+                const x1 = parseFloat(document.getElementById("x1").value);
+                const y1 = parseFloat(document.getElementById("y1").value);
+                const x2 = parseFloat(document.getElementById("x2").value);
+                const y2 = parseFloat(document.getElementById("y2").value);
+                const x3 = parseFloat(document.getElementById("x3").value);
+                const y3 = parseFloat(document.getElementById("y3").value);
+                // Mendapatkan nilai delta t (Δt) dari input pengguna
+                const dt = parseFloat(document.getElementById("dt").value);
+
+                // Menghitung jumlah langkah/titik yang akan dihitung pada kurva
+                // Math.floor(1 / dt) akan memberikan jumlah segmen, +1 untuk jumlah titik
+                const steps = Math.floor(1 / dt);
+                // Menampilkan jumlah titik yang dihitung pada elemen HTML dengan id "jumlahTitik"
+                document.getElementById("jumlahTitik").textContent = steps + 1;
+
+                // Mendapatkan elemen tbody dari tabel hasil
+                const tbody = document.querySelector("#tabelHasil tbody");
+                // Mengosongkan isi tbody sebelum menambahkan data baru
+                tbody.innerHTML = "";
+
+                // --- Menggambar Kurva Bezier ---
+                // Memulai jalur gambar baru
+                ctx.beginPath();
+                // Memindahkan "pena" ke titik awal kurva (P0)
+                ctx.moveTo(x0, y0);
+
+                // Iterasi dari t=0 hingga t=1 dengan langkah sebesar dt
+                for (let i = 0; i <= steps; i++) {
+                    // Menghitung nilai parameter t saat ini
+                    const t = i * dt;
+
+                    // Menghitung koordinat X(t) menggunakan rumus Bezier Kubik
+                    // B(t)_x = (1-t)^3 * x0 + 3(1-t)^2 * t * x1 + 3(1-t) * t^2 * x2 + t^3 * x3
+                    const xt = Math.pow(1 - t, 3) * x0 +
+                               3 * Math.pow(1 - t, 2) * t * x1 +
+                               3 * (1 - t) * Math.pow(t, 2) * x2 +
+                               Math.pow(t, 3) * x3;
+
+                    // Menghitung koordinat Y(t) menggunakan rumus Bezier Kubik
+                    // B(t)_y = (1-t)^3 * y0 + 3(1-t)^2 * t * y1 + 3(1-t) * t^2 * y2 + t^3 * y3
+                    const yt = Math.pow(1 - t, 3) * y0 +
+                               3 * Math.pow(1 - t, 2) * t * y1 +
+                               3 * (1 - t) * Math.pow(t, 2) * y2 +
+                               Math.pow(t, 3) * y3;
+
+                    // Menambahkan segmen garis dari titik sebelumnya ke titik (xt, yt)
+                    ctx.lineTo(xt, yt);
+
+                    // Membuat baris baru untuk tabel hasil
+                    const row = document.createElement("tr");
+                    // Mengisi baris dengan nilai t, X(t), dan Y(t) yang sudah diformat
+                    row.innerHTML = `<td>${t.toFixed(2)}</td><td>${xt.toFixed(2)}</td><td>${yt.toFixed(2)}</td>`;
+                    // Menambahkan baris ke tbody tabel
+                    tbody.appendChild(row);
+                }
+
+                // Mengatur warna garis kurva menjadi biru
+                ctx.strokeStyle = "blue";
+                // Menggambar garis kurva yang telah ditentukan sebelumnya
+                ctx.stroke();
+
+                // --- Menggambar Titik Kontrol dan Garis Bantu ---
+                // Mengatur warna stroke untuk garis bantu (hijau)
+                ctx.strokeStyle = "green";
+                // Mengatur gaya putus-putus untuk garis bantu
+                ctx.setLineDash([5, 5]); // [panjang_garis, panjang_spasi]
+
+                // Menggambar garis dari P0 ke P1
+                ctx.beginPath();
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y1);
+                ctx.stroke();
+
+                // Menggambar garis dari P1 ke P2
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // Menggambar garis dari P2 ke P3
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x3, y3);
+                ctx.stroke();
+
+                // Menghilangkan gaya putus-putus agar tidak mempengaruhi gambar selanjutnya
+                ctx.setLineDash([]);
+
+                // Menggambar titik-titik kontrol (P0, P1, P2, P3)
+                const controlPoints = [
+                    {x: x0, y: y0, label: "P0"},
+                    {x: x1, y: y1, label: "P1"},
+                    {x: x2, y: y2, label: "P2"},
+                    {x: x3, y: y3, label: "P3"}
+                ];
+
+                ctx.fillStyle = "black"; // Warna untuk titik kontrol
+                ctx.font = "12px Arial"; // Ukuran dan jenis font untuk label titik kontrol
+                ctx.textAlign = "center"; // Penjajaran teks label
+
+                controlPoints.forEach(point => {
+                    ctx.beginPath();
+                    // Menggambar lingkaran untuk titik kontrol
+                    ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI); // Lingkaran dengan radius 4
+                    ctx.fill(); // Mengisi lingkaran
+
+                    // Menggambar label untuk titik kontrol
+                    ctx.fillText(point.label, point.x, point.y - 10); // Label di atas titik
+                });
+
+                // --- Menggambar Titik Hasil Kurva (opsional, jika ingin visualisasi titik individual) ---
+                ctx.fillStyle = "red"; // Mengatur warna titik hasil kurva menjadi merah
+                for (let i = 0; i <= steps; i++) {
+                    const t = i * dt;
+                    // Menghitung kembali koordinat (xt, yt) untuk titik individual
+                    const xt = Math.pow(1 - t, 3) * x0 +
+                               3 * Math.pow(1 - t, 2) * t * x1 +
+                               3 * (1 - t) * Math.pow(t, 2) * x2 +
+                               Math.pow(t, 3) * x3;
+
+                    const yt = Math.pow(1 - t, 3) * y0 +
+                               3 * Math.pow(1 - t, 2) * t * y1 +
+                               3 * (1 - t) * Math.pow(t, 2) * y2 +
+                               Math.pow(t, 3) * y3;
+
+                    ctx.beginPath();
+                    // Menggambar lingkaran kecil di setiap titik hasil kurva
+                    ctx.arc(xt, yt, 2.5, 0, 2 * Math.PI); // Lingkaran dengan radius 2.5
+                    ctx.fill(); // Mengisi lingkaran
+                }
+            }
+
+            // Memanggil fungsi hitungKurva() saat halaman pertama kali dimuat
+            // Ini memastikan kurva dan tabel sudah terisi saat pengguna membuka halaman
+            hitungKurva();
+        </script>
+    </div>
+</body>
+</html>

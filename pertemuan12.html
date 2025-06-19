@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Algoritma Grafika 3D Sederhana</title>
+    <style>
+        /* Gaya dasar untuk body: font, padding, dan latar belakang */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font yang lebih modern dan mudah dibaca */
+            padding: 20px; /* Padding di sekitar konten halaman */
+            background: linear-gradient(to right, #e0f2f7, #f7fcfd); /* Latar belakang gradien biru muda-putih */
+            color: #333; /* Warna teks utama yang lembut */
+            line-height: 1.6; /* Spasi baris untuk keterbacaan */
+        }
+
+        /* Gaya untuk judul utama */
+        h2 {
+            color: #2c3e50; /* Warna judul yang gelap dan kuat */
+            border-bottom: 3px solid #3498db; /* Garis bawah biru yang menonjol */
+            padding-bottom: 12px; /* Padding di bawah garis */
+            margin-bottom: 25px; /* Margin bawah judul */
+            text-align: center; /* Judul rata tengah */
+            font-size: 1.8em; /* Ukuran font judul yang lebih besar */
+        }
+
+        /* Gaya untuk input number */
+        input[type="number"] { 
+            width: 70px; /* Lebar input yang lebih nyaman */
+            padding: 8px; /* Padding di dalam input */
+            margin: 5px; /* Margin di sekitar input */
+            border: 1px solid #a0c0e0; /* Border biru abu-abu yang lebih menarik */
+            border-radius: 5px; /* Sudut membulat */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Bayangan dalam untuk efek kedalaman */
+            transition: border-color 0.3s, box-shadow 0.3s; /* Transisi halus saat fokus */
+        }
+        input[type="number"]:focus {
+            border-color: #3498db; /* Border biru cerah saat fokus */
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); /* Bayangan saat fokus */
+            outline: none; /* Hilangkan outline default browser */
+        }
+
+        /* Gaya untuk elemen canvas */
+        canvas { 
+            display: block; /* Agar canvas bisa di-center */
+            margin: 25px auto; /* Margin atas/bawah dan pusatkan secara horizontal */
+            border: 2px solid #2c3e50; /* Border tebal dan gelap */
+            background: #ffffff; /* Latar belakang putih bersih */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); /* Bayangan lebih menonjol */
+            border-radius: 8px; /* Sudut membulat untuk canvas */
+        }
+
+        /* Gaya untuk grup input (kontainer untuk sekelompok kontrol) */
+        .input-group { 
+            margin-bottom: 20px; /* Margin bawah */
+            padding: 20px; /* Padding di dalam grup */
+            background: #fdfdfd; /* Latar belakang hampir putih */
+            border-radius: 10px; /* Sudut membulat */
+            border: 1px solid #e0e0e0; /* Border lembut */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Bayangan lembut */
+            transition: all 0.3s ease; /* Transisi saat perubahan */
+        }
+        .input-group:hover {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12); /* Bayangan sedikit lebih besar saat hover */
+        }
+
+        /* Gaya untuk label dalam grup input */
+        .input-group label {
+            display: inline-block; /* Membuat label dan input sejajar */
+            margin-right: 15px; /* Margin kanan antar label-input group */
+            margin-bottom: 10px; /* Margin bawah untuk baris label */
+            font-weight: bold; /* Teks label tebal */
+            color: #4a69bd; /* Warna label yang sedikit berbeda */
+        }
+
+        /* Gaya untuk radio button dan labelnya */
+        .projection-type {
+            margin-bottom: 15px; /* Margin bawah */
+            font-weight: bold;
+            color: #4a69bd;
+        }
+        .projection-type input[type="radio"] {
+            width: auto; /* Otomatis lebar untuk radio button */
+            margin-right: 5px; /* Spasi setelah radio button */
+            vertical-align: middle; /* Sejajarkan vertikal dengan label */
+            transform: scale(1.2); /* Perbesar radio button */
+        }
+        .projection-type label {
+            font-weight: normal; /* Label radio button tidak terlalu tebal */
+            color: #333;
+            margin-right: 20px;
+        }
+
+
+        /* Gaya untuk tombol */
+        button {
+            padding: 12px 25px; /* Padding tombol yang lebih besar */
+            background-color: #3498db; /* Warna biru cerah */
+            color: white; /* Warna teks putih */
+            border: none; /* Tanpa border */
+            border-radius: 6px; /* Sudut membulat */
+            cursor: pointer; /* Kursor pointer saat hover */
+            font-size: 1em; /* Ukuran font yang pas */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s; /* Transisi halus */
+            margin-right: 15px; /* Margin antar tombol */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Bayangan tombol */
+        }
+        button:hover {
+            background-color: #2980b9; /* Warna biru lebih gelap saat hover */
+            transform: translateY(-2px); /* Efek angkat sedikit */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Bayangan lebih besar saat hover */
+        }
+        button:active {
+            transform: translateY(0); /* Kembali ke posisi semula saat diklik */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Bayangan mengecil saat diklik */
+        }
+
+        /* Gaya untuk bagian output */
+        .output {
+            margin-top: 30px; /* Margin atas lebih besar */
+            background: #fdfdfd; /* Latar belakang putih */
+            padding: 20px; /* Padding lebih besar */
+            border: 1px solid #e0e0e0; /* Border lembut */
+            border-radius: 10px; /* Sudut membulat */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Bayangan lembut */
+        }
+        .output h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #bbb; /* Garis putus-putus */
+            padding-bottom: 8px;
+        }
+
+        /* Gaya untuk tabel dalam output */
+        table {
+            border-collapse: collapse; /* Menggabungkan border sel */
+            width: 100%; /* Lebar tabel 100% */
+            margin-top: 15px; /* Margin atas */
+            font-size: 0.9em; /* Ukuran font tabel sedikit lebih kecil */
+        }
+        table, th, td {
+            border: 1px solid #d0d0d0; /* Border sel dan tabel yang lebih halus */
+        }
+        th, td {
+            padding: 10px; /* Padding sel yang lebih banyak */
+            text-align: center; /* Teks rata tengah */
+        }
+        th {
+            background-color: #f0f0f0; /* Latar belakang header tabel */
+            font-weight: bold; /* Teks header tebal */
+            color: #555; /* Warna teks header */
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f8f8f8; /* Warna latar belakang sel genap */
+        }
+
+        /* Gaya untuk bagian penjelasan */
+        .penjelasan-bawah {
+            margin-top: 40px; /* Margin atas yang lebih besar */
+            background: #ffffff; /* Latar belakang putih */
+            padding: 25px; /* Padding lebih banyak */
+            border: 1px solid #dcdcdc; /* Border abu-abu */
+            border-radius: 10px; /* Sudut membulat */
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1); /* Bayangan yang lebih menonjol */
+        }
+        .penjelasan-bawah strong {
+            color: #2c3e50; /* Warna teks tebal */
+        }
+        .penjelasan-bawah ol, .penjelasan-bawah ul {
+            margin-top: 15px;
+            margin-left: 25px;
+            line-height: 1.7; /* Spasi baris untuk keterbacaan */
+        }
+        .penjelasan-bawah pre {
+            background-color: #ecf0f1; /* Latar belakang kode yang lebih lembut */
+            padding: 15px; /* Padding kode */
+            border-left: 5px solid #3498db; /* Garis vertikal biru */
+            font-family: 'Fira Code', 'Cascadia Code', monospace; /* Font monospasi yang bagus */
+            overflow-x: auto; /* Scroll horizontal untuk kode panjang */
+            border-radius: 5px; /* Sudut membulat */
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h2>Algoritma Grafika 3D Sederhana - Interaktif</h2>
+
+        <div class="input-group">
+            <h3>Pengaturan Kubus 3D</h3>
+            <label>Ukuran: <input type="number" id="cubeSize" value="50" title="Ukuran sisi kubus"></label><br>
+            
+            <label>Translasi X: <input type="number" id="transX" value="0" title="Pergeseran di sumbu X"></label>
+            <label>Translasi Y: <input type="number" id="transY" value="0" title="Pergeseran di sumbu Y"></label>
+            <label>Translasi Z: <input type="number" id="transZ" value="0" title="Pergeseran di sumbu Z"></label><br>
+            
+            <label>Rotasi X (derajat): <input type="number" id="rotX" value="0" title="Rotasi di sekitar sumbu X (derajat)"></label>
+            <label>Rotasi Y (derajat): <input type="number" id="rotY" value="0" title="Rotasi di sekitar sumbu Y (derajat)"></label>
+            <label>Rotasi Z (derajat): <input type="number" id="rotZ" value="0" title="Rotasi di sekitar sumbu Z (derajat)"></label><br>
+            
+            <label>Skala X: <input type="number" step="0.1" id="scaleX" value="1" title="Faktor skala di sumbu X"></label>
+            <label>Skala Y: <input type="number" step="0.1" id="scaleY" value="1" title="Faktor skala di sumbu Y"></label>
+            <label>Skala Z: <input type="number" step="0.1" id="scaleZ" value="1" title="Faktor skala di sumbu Z"></label>
+        </div>
+
+        <div class="input-group">
+            <h3>Pengaturan Kamera & Proyeksi</h3>
+            <div class="projection-type">
+                <input type="radio" id="perspectiveProj" name="projection" value="perspective" checked onchange="draw3D()">
+                <label for="perspectiveProj" title="Objek yang lebih jauh terlihat lebih kecil (ilusi kedalaman).">Perspektif</label>
+                <input type="radio" id="orthoProj" name="projection" value="orthographic" onchange="draw3D()">
+                <label for="orthoProj" title="Garis proyeksi sejajar, objek tidak mengecil dengan jarak (untuk gambar teknik).">Ortografi</label>
+            </div>
+            <label>Jarak Fokus (D / Z Kamera): <input type="number" id="focalLength" value="250" title="Jarak dari kamera ke bidang proyeksi (hanya untuk Perspektif)."></label>
+        </div>
+
+        <button onclick="draw3D()">Render 3D</button>
+        <button onclick="reset3D()">Reset</button>
+
+        <canvas id="canvas3D" width="600" height="400"></canvas>
+
+        <div class="output">
+            <h3>Koordinat Verteks 3D (Objek Awal)</h3>
+            <table id="originalVerticesTable">
+                <thead><tr><th>#</th><th>X</th><th>Y</th><th>Z</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <h3>Koordinat Verteks 3D (Setelah Transformasi)</h3>
+            <table id="transformedVerticesTable">
+                <thead><tr><th>#</th><th>X'</th><th>Y'</th><th>Z'</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <h3>Koordinat Verteks 2D (Hasil Proyeksi)</h3>
+            <table id="projectedVerticesTable">
+                <thead><tr><th>#</th><th>X''</th><th>Y''</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Grafika 3D:</strong><br><br>
+            Untuk menampilkan objek 3D pada layar 2D yang datar, serangkaian transformasi dan proses komputasi yang kompleks harus diterapkan. Pipeline grafika 3D yang disederhanakan meliputi:
+
+            <ol>
+                <li><strong>Model Definition (Definisi Model):</strong>
+                    Objek 3D didefinisikan sebagai kumpulan **verteks** (titik dalam ruang 3D, e.g., (x,y,z)) dan **edges** (garis yang menghubungkan pasangan verteks). Dalam contoh ini, kita menggunakan sebuah kubus sederhana.
+                </li>
+                <li><strong>Model Transformation (Transformasi Model):</strong>
+                    Menerapkan transformasi geometris seperti **translasi** (menggeser posisi), **rotasi** (memutar orientasi), dan **skala** (mengubah ukuran) pada objek. Dalam grafika 3D, operasi ini biasanya dilakukan menggunakan **matriks transformasi 4x4 (homogen)**. Penggunaan matriks ini memungkinkan semua transformasi (translasi, rotasi, skala, bahkan proyeksi) digabungkan menjadi satu operasi perkalian matriks yang efisien.
+                    <ul>
+                        <li>**Translasi:** Menggeser objek di sepanjang sumbu X, Y, dan Z.</li>
+                        <li>**Rotasi:** Memutar objek di sekitar sumbu X, Y, atau Z. Urutan rotasi sangat penting (misalnya, X -> Y -> Z bisa berbeda dari Y -> X -> Z).</li>
+                        <li>**Skala:** Mengubah ukuran objek secara seragam atau tidak seragam di sepanjang sumbu.</li>
+                    </ul>
+                </li>
+                <li><strong>View Transformation (Transformasi Kamera):</strong>
+                    Mengubah koordinat objek dari sistem koordinat dunia (tempat objek berada) ke sistem koordinat pandang kamera. Dalam implementasi sederhana ini, kita mengasumsikan kamera berada di pusat koordinat dan melihat ke arah tertentu (misalnya, sumbu Z positif), sehingga transformasi ini dapat disederhanakan atau diabaikan jika objek dan kamera relatif tetap pada posisi default.
+                </li>
+                <li><strong>Projection Transformation (Transformasi Proyeksi):</strong>
+                    Mengubah koordinat 3D (dari ruang pandang kamera) menjadi koordinat 2D yang cocok untuk ditampilkan di layar. Ini adalah langkah kunci yang menciptakan ilusi kedalaman.
+                    <ul>
+                        <li>**Proyeksi Ortografi:**
+                            <pre>X_screen = X
+Y_screen = Y</pre>
+                            Garis-garis proyeksi sejajar, sehingga objek tidak mengecil dengan jarak. Cocok untuk gambar teknik atau pandangan isometrik. Tidak ada efek kedalaman.
+                        </li>
+                        <li>**Proyeksi Perspektif:**
+                            <pre>X_screen = (X * D) / Z
+Y_screen = (Y * D) / Z</pre>
+                            Di mana `D` adalah jarak dari pusat proyeksi (kamera) ke bidang proyeksi, dan `Z` adalah jarak objek dari kamera. Garis-garis proyeksi bertemu di satu titik (pusat proyeksi/kamera), menciptakan ilusi kedalaman: objek yang lebih jauh terlihat lebih kecil. Ini adalah bagaimana mata manusia melihat dunia.
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Viewport Transformation (Transformasi Viewport):</strong>
+                    Memetakan koordinat 2D yang telah diproyeksikan (seringkali dalam rentang -1 hingga 1 atau 0 hingga 1) ke piksel spesifik di layar (dalam kasus ini, di dalam elemen HTML Canvas). Ini melibatkan penskalaan dan translasi agar objek pas di area tampilan yang tersedia di kanvas.
+                </li>
+                <li><strong>Rendering (Penggambaran):</strong>
+                    Langkah terakhir adalah menggambar objek yang telah diproyeksikan (garis, poligon) pada kanvas menggunakan fungsi gambar 2D dasar. Algoritma tambahan seperti culling (membuang bagian yang tidak terlihat) atau pewarnaan permukaan dapat diterapkan di sini.
+                </li>
+            </ol>
+            Implementasi ini akan secara interaktif menunjukkan tahapan-tahapan tersebut untuk sebuah kubus 3D, memungkinkan Anda untuk memanipulasi transformasi dan jenis proyeksi.
+        </div>
+
+        <script>
+            // Mendapatkan elemen canvas dari DOM
+            const canvas = document.getElementById("canvas3D");
+            // Mendapatkan konteks gambar 2D dari canvas
+            const ctx = canvas.getContext("2d");
+
+            // Mendapatkan elemen tbody dari tabel untuk menampilkan koordinat
+            const originalVerticesTableBody = document.querySelector("#originalVerticesTable tbody");
+            const transformedVerticesTableBody = document.querySelector("#transformedVerticesTable tbody");
+            const projectedVerticesTableBody = document.querySelector("#projectedVerticesTable tbody");
+
+            // --- Bagian Matriks (Fungsi Bantuan Matematika untuk Transformasi 3D) ---
+
+            /**
+             * Mengalikan dua matriks 4x4.
+             * Matriks disimpan sebagai array 16 elemen (flat array, diinterpretasikan sebagai row-major).
+             * M = A x B
+             * @param {number[]} A - Matriks pertama (4x4).
+             * @param {number[]} B - Matriks kedua (4x4).
+             * @returns {number[]} Matriks hasil perkalian (4x4).
+             */
+            function multiplyMatrices(A, B) {
+                const C = new Array(16).fill(0); // Matriks hasil (4x4) diinisialisasi dengan nol
+                for (let i = 0; i < 4; i++) { // Iterasi baris matriks A (dan baris hasil C)
+                    for (let j = 0; j < 4; j++) { // Iterasi kolom matriks B (dan kolom hasil C)
+                        for (let k = 0; k < 4; k++) { // Iterasi kolom matriks A / baris matriks B
+                            // C[row_C * 4 + col_C] += A[row_A * 4 + col_A] * B[row_B * 4 + col_B]
+                            C[i * 4 + j] += A[i * 4 + k] * B[k * 4 + j];
+                        }
+                    }
+                }
+                return C; // Mengembalikan matriks hasil
+            }
+
+            /**
+             * Mengalikan vektor 4D (homogen) dengan matriks 4x4.
+             * V_out = M x V_in
+             * @param {number[]} M - Matriks transformasi (4x4).
+             * @param {number[]} V - Vektor 4D (misal: [x, y, z, w], di mana w biasanya 1 untuk titik).
+             * @returns {number[]} Vektor 4D hasil perkalian.
+             */
+            function transformVector(M, V) {
+                const V_out = new Array(4).fill(0); // Vektor hasil diinisialisasi dengan nol
+                for (let i = 0; i < 4; i++) { // Iterasi komponen vektor output (x, y, z, w)
+                    V_out[i] = V[0] * M[i * 4 + 0] + // Komponen X vektor input dikali kolom pertama matriks
+                                 V[1] * M[i * 4 + 1] + // Komponen Y vektor input dikali kolom kedua matriks
+                                 V[2] * M[i * 4 + 2] + // Komponen Z vektor input dikali kolom ketiga matriks
+                                 V[3] * M[i * 4 + 3]; // Komponen W vektor input dikali kolom keempat matriks
+                }
+                return V_out; // Mengembalikan vektor hasil
+            }
+
+            /**
+             * Membuat matriks identitas 4x4.
+             * Matriks identitas tidak mengubah vektor ketika dikalikan.
+             * @returns {number[]} Matriks identitas 4x4.
+             */
+            function identityMatrix() {
+                return [
+                    1, 0, 0, 0, // Baris 1
+                    0, 1, 0, 0, // Baris 2
+                    0, 0, 1, 0, // Baris 3
+                    0, 0, 0, 1  // Baris 4
+                ];
+            }
+
+            /**
+             * Membuat matriks translasi 4x4.
+             * @param {number} tx - Translasi di sumbu X.
+             * @param {number} ty - Translasi di sumbu Y.
+             * @param {number} tz - Translasi di sumbu Z.
+             * @returns {number[]} Matriks translasi 4x4.
+             */
+            function translationMatrix(tx, ty, tz) {
+                const M = identityMatrix(); // Mulai dari matriks identitas
+                M[3] = tx;  // Elemen di baris 0, kolom 3 (x offset)
+                M[7] = ty;  // Elemen di baris 1, kolom 3 (y offset)
+                M[11] = tz; // Elemen di baris 2, kolom 3 (z offset)
+                return M;
+            }
+
+            /**
+             * Membuat matriks skala 4x4.
+             * @param {number} sx - Skala di sumbu X.
+             * @param {number} sy - Skala di sumbu Y.
+             * @param {number} sz - Skala di sumbu Z.
+             * @returns {number[]} Matriks skala 4x4.
+             */
+            function scaleMatrix(sx, sy, sz) {
+                const M = identityMatrix(); // Mulai dari matriks identitas
+                M[0] = sx;  // Elemen di baris 0, kolom 0 (skala X)
+                M[5] = sy;  // Elemen di baris 1, kolom 1 (skala Y)
+                M[10] = sz; // Elemen di baris 2, kolom 2 (skala Z)
+                return M;
+            }
+
+            /**
+             * Membuat matriks rotasi 4x4 di sekitar sumbu X.
+             * @param {number} angleRad - Sudut rotasi dalam radian.
+             * @returns {number[]} Matriks rotasi X 4x4.
+             */
+            function rotationXMatrix(angleRad) {
+                const c = Math.cos(angleRad); // Kosinus sudut
+                const s = Math.sin(angleRad); // Sinus sudut
+                const M = identityMatrix(); // Mulai dari matriks identitas
+                M[5] = c;   // cos(theta)
+                M[6] = s;   // sin(theta)
+                M[9] = -s;  // -sin(theta)
+                M[10] = c;  // cos(theta)
+                return M;
+            }
+
+            /**
+             * Membuat matriks rotasi 4x4 di sekitar sumbu Y.
+             * @param {number} angleRad - Sudut rotasi dalam radian.
+             * @returns {number[]} Matriks rotasi Y 4x4.
+             */
+            function rotationYMatrix(angleRad) {
+                const c = Math.cos(angleRad); // Kosinus sudut
+                const s = Math.sin(angleRad); // Sinus sudut
+                const M = identityMatrix(); // Mulai dari matriks identitas
+                M[0] = c;   // cos(theta)
+                M[2] = -s;  // -sin(theta)
+                M[8] = s;   // sin(theta)
+                M[10] = c;  // cos(theta)
+                return M;
+            }
+
+            /**
+             * Membuat matriks rotasi 4x4 di sekitar sumbu Z.
+             * @param {number} angleRad - Sudut rotasi dalam radian.
+             * @returns {number[]} Matriks rotasi Z 4x4.
+             */
+            function rotationZMatrix(angleRad) {
+                const c = Math.cos(angleRad); // Kosinus sudut
+                const s = Math.sin(angleRad); // Sinus sudut
+                const M = identityMatrix(); // Mulai dari matriks identitas
+                M[0] = c;   // cos(theta)
+                M[1] = s;   // sin(theta)
+                M[4] = -s;  // -sin(theta)
+                M[5] = c;   // cos(theta)
+                return M;
+            }
+
+            // --- Definisi Objek 3D (Kubus) ---
+
+            let originalVertices = []; // Array untuk menyimpan verteks kubus asli (relatif terhadap pusatnya 0,0,0)
+            
+            // Definisi Edges (sisi) kubus: setiap elemen adalah pasangan indeks verteks yang membentuk sebuah garis
+            const edges = [
+                // Sisi depan (Z negatif)
+                [0, 1], [1, 3], [3, 2], [2, 0],
+                // Sisi belakang (Z positif)
+                [4, 5], [5, 7], [7, 6], [6, 4],
+                // Sisi penghubung (dari depan ke belakang)
+                [0, 4], [1, 5], [2, 6], [3, 7]
+            ];
+
+            /**
+             * Menghasilkan verteks kubus asli berdasarkan ukurannya.
+             * Verteks ini berada di sekitar titik asal (0,0,0) untuk memudahkan penerapan transformasi.
+             * @param {number} size - Ukuran sisi kubus.
+             */
+            function generateCubeVertices(size) {
+                const halfSize = size / 2; // Setengah ukuran sisi untuk penempatan verteks simetris di sekitar origin
+                originalVertices = [
+                    // Verteks sisi Z negatif (depan)
+                    { x: -halfSize, y: -halfSize, z: -halfSize }, // Index 0: Kiri-Bawah-Depan
+                    { x:  halfSize, y: -halfSize, z: -halfSize }, // Index 1: Kanan-Bawah-Depan
+                    { x: -halfSize, y:  halfSize, z: -halfSize }, // Index 2: Kiri-Atas-Depan
+                    { x:  halfSize, y:  halfSize, z: -halfSize }, // Index 3: Kanan-Atas-Depan
+                    // Verteks sisi Z positif (belakang)
+                    { x: -halfSize, y: -halfSize, z:  halfSize }, // Index 4: Kiri-Bawah-Belakang
+                    { x:  halfSize, y: -halfSize, z:  halfSize }, // Index 5: Kanan-Bawah-Belakang
+                    { x: -halfSize, y:  halfSize, z:  halfSize }, // Index 6: Kiri-Atas-Belakang
+                    { x:  halfSize, y:  halfSize, z:  halfSize }  // Index 7: Kanan-Atas-Belakang
+                ];
+            }
+
+            // --- Fungsi Rendering dan Transformasi Utama ---
+
+            /**
+             * Menggambar garis 2D pada kanvas.
+             * Ini adalah fungsi dasar untuk merender hasil proyeksi ke layar.
+             * @param {number} x1 - X koordinat titik 1.
+             * @param {number} y1 - Y koordinat titik 1.
+             * @param {number} x2 - X koordinat titik 2.
+             * @param {number} y2 - Y koordinat titik 2.
+             * @param {string} color - Warna garis (default: 'black').
+             * @param {number} width - Lebar garis (default: 2 piksel).
+             */
+            function drawLine2D(x1, y1, x2, y2, color = 'black', width = 2) {
+                ctx.beginPath();    // Memulai jalur gambar baru
+                ctx.moveTo(x1, y1); // Memindahkan "pena" ke titik awal
+                ctx.lineTo(x2, y2); // Menggambar garis ke titik akhir
+                ctx.strokeStyle = color; // Mengatur warna garis
+                ctx.lineWidth = width; // Mengatur ketebalan garis
+                ctx.stroke();       // Menggambar garis
+            }
+
+            /**
+             * Memperbarui tabel HTML dengan data verteks.
+             * @param {HTMLElement} tbodyElement - Elemen tbody tabel yang akan diperbarui.
+             * @param {Array<Object>} vertices - Array objek verteks ({x, y, z} atau {x, y}).
+             * @param {number} [dimensions=3] - Jumlah dimensi yang akan ditampilkan (3 untuk 3D, 2 untuk 2D).
+             */
+            function updateTable(tbodyElement, vertices, dimensions = 3) {
+                tbodyElement.innerHTML = ''; // Mengosongkan isi tabel yang ada
+                vertices.forEach((v, index) => { // Iterasi setiap verteks
+                    const row = tbodyElement.insertRow(); // Membuat baris baru di tabel
+                    row.insertCell().textContent = index; // Kolom pertama: indeks verteks
+                    row.insertCell().textContent = v.x.toFixed(2); // Kolom X, dibulatkan 2 desimal
+                    row.insertCell().textContent = v.y.toFixed(2); // Kolom Y, dibulatkan 2 desimal
+                    if (dimensions === 3) { // Jika menampilkan data 3D, tambahkan kolom Z
+                        row.insertCell().textContent = v.z.toFixed(2); // Kolom Z, dibulatkan 2 desimal
+                    }
+                });
+            }
+
+            /**
+             * Fungsi utama untuk menggambar objek 3D pada kanvas.
+             * Ini mengkoordinasikan seluruh pipeline grafika 3D:
+             * 1. Definisi Model
+             * 2. Transformasi Model (Translasi, Rotasi, Skala)
+             * 3. Transformasi Proyeksi (Perspektif atau Ortografi)
+             * 4. Transformasi Viewport
+             * 5. Rendering (Menggambar edges)
+             */
+            function draw3D() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh area kanvas
+
+                // Mendapatkan nilai pengaturan dari elemen input HTML
+                const size = parseFloat(document.getElementById('cubeSize').value);
+                const transX = parseFloat(document.getElementById('transX').value);
+                const transY = parseFloat(document.getElementById('transY').value);
+                const transZ = parseFloat(document.getElementById('transZ').value);
+                const rotXDeg = parseFloat(document.getElementById('rotX').value);
+                const rotYDeg = parseFloat(document.getElementById('rotY').value);
+                const rotZDeg = parseFloat(document.getElementById('rotZ').value);
+                const scaleX = parseFloat(document.getElementById('scaleX').value);
+                const scaleY = parseFloat(document.getElementById('scaleY').value);
+                const scaleZ = parseFloat(document.getElementById('scaleZ').value);
+                const focalLength = parseFloat(document.getElementById('focalLength').value);
+                // Cek jenis proyeksi yang dipilih (true untuk Perspektif, false untuk Ortografi)
+                const isPerspective = document.getElementById('perspectiveProj').checked;
+
+                // 1. Model Definition: Menghasilkan verteks kubus asli
+                generateCubeVertices(size);
+                // Memperbarui tabel untuk verteks asli
+                updateTable(originalVerticesTableBody, originalVertices, 3);
+
+                // 2. Model Transformation: Menggabungkan semua transformasi model (Skala, Rotasi, Translasi)
+                let modelMatrix = identityMatrix(); // Mulai dengan matriks identitas
+
+                // Urutan transformasi penting! Umumnya: Skala -> Rotasi -> Translasi
+                // Ini berarti objek diskala, lalu dirotasi, lalu digeser.
+
+                // Terapkan Skala
+                modelMatrix = multiplyMatrices(modelMatrix, scaleMatrix(scaleX, scaleY, scaleZ));
+
+                // Terapkan Rotasi (konversi derajat ke radian: derajat * PI / 180)
+                modelMatrix = multiplyMatrices(modelMatrix, rotationXMatrix(rotXDeg * Math.PI / 180));
+                modelMatrix = multiplyMatrices(modelMatrix, rotationYMatrix(rotYDeg * Math.PI / 180));
+                modelMatrix = multiplyMatrices(modelMatrix, rotationZMatrix(rotZDeg * Math.PI / 180));
+
+                // Terapkan Translasi
+                modelMatrix = multiplyMatrices(modelMatrix, translationMatrix(transX, transY, transZ));
+
+                // Terapkan matriks model ke setiap verteks asli
+                let transformedVertices = []; // Array untuk menyimpan verteks setelah transformasi model
+                originalVertices.forEach(v => {
+                    // Konversi verteks 3D (x, y, z) ke vektor homogen 4D (x, y, z, 1)
+                    const v4 = [v.x, v.y, v.z, 1];
+                    // Lakukan transformasi dengan mengalikan vektor homogen dengan matriks model
+                    const tv4 = transformVector(modelMatrix, v4);
+                    // Simpan kembali sebagai objek 3D (x, y, z)
+                    transformedVertices.push({ x: tv4[0], y: tv4[1], z: tv4[2] });
+                });
+                // Memperbarui tabel untuk verteks setelah transformasi
+                updateTable(transformedVerticesTableBody, transformedVertices, 3);
+
+                // 3. Projection Transformation: Mengubah koordinat 3D ke 2D
+                let projectedVertices = []; // Array untuk menyimpan verteks setelah proyeksi
+                transformedVertices.forEach(v => {
+                    let px, py; // Koordinat X dan Y yang diproyeksikan
+                    if (isPerspective) {
+                        // Rumus Proyeksi Perspektif: (x_proj = x_world * D / Z_world)
+                        // Kita asumsikan kamera berada di (0,0,0) dan melihat sepanjang sumbu Z positif.
+                        // Objek yang memiliki Z lebih besar (lebih jauh) akan diproyeksikan lebih kecil.
+                        // Perhatikan bahwa Z_world harus lebih besar dari 0.
+                        const z = v.z + focalLength; // Menyesuaikan Z agar focalLength menjadi "jarak kamera ke bidang proyeksi"
+                                                     // Jika Z objek terlalu kecil (mendekati atau kurang dari -focalLength),
+                                                     // maka objek tersebut berada di belakang bidang proyeksi atau kamera itu sendiri,
+                                                     // yang bisa menyebabkan pembagian oleh nol atau hasil tak terhingga.
+                        if (z <= 0) { // Jika objek di belakang atau di bidang proyeksi (untuk kasus ini)
+                             // Bisa di-handle dengan clipping, tapi di sini kita hanya menjaga posisi relatif
+                            px = v.x; 
+                            py = v.y;
+                        } else {
+                            px = (v.x * focalLength) / z; // Proyeksi X
+                            py = (v.y * focalLength) / z; // Proyeksi Y
+                        }
+                    } else {
+                        // Rumus Proyeksi Ortografi: (x_proj = x_world, y_proj = y_world)
+                        // Objek tidak mengecil dengan jarak Z.
+                        px = v.x;
+                        py = v.y;
+                    }
+                    projectedVertices.push({ x: px, y: py }); // Tambahkan verteks 2D yang diproyeksikan
+                });
+                // Memperbarui tabel untuk verteks setelah proyeksi
+                updateTable(projectedVerticesTableBody, projectedVertices, 2);
+
+                // 4. Viewport Transformation: Memetakan koordinat proyeksi ke koordinat piksel kanvas
+                // Kita memusatkan objek di tengah kanvas
+                const offsetX = canvas.width / 2;  // Offset X ke tengah kanvas
+                const offsetY = canvas.height / 2; // Offset Y ke tengah kanvas
+
+                projectedVertices.forEach(v => {
+                    v.x += offsetX; // Geser X ke kanan (pusat)
+                    v.y += offsetY; // Geser Y ke bawah (pusat)
+                });
+
+                // 5. Rendering: Menggambar edges (sisi-sisi) kubus pada kanvas 2D
+                edges.forEach(edge => {
+                    const p1 = projectedVertices[edge[0]]; // Titik pertama dari edge
+                    const p2 = projectedVertices[edge[1]]; // Titik kedua dari edge
+
+                    // Culling sederhana: Hanya gambar garis jika kedua titik berada di dalam batas kanvas.
+                    // Ini bukan culling 3D yang sebenarnya (misal, back-face culling),
+                    // tetapi membantu mencegah garis "melompat" saat objek bergerak keluar viewport.
+                    if (p1.x >= 0 && p1.x <= canvas.width && p1.y >= 0 && p1.y <= canvas.height &&
+                        p2.x >= 0 && p2.x <= canvas.width && p2.y >= 0 && p2.y <= canvas.height) {
+                        drawLine2D(p1.x, p1.y, p2.x, p2.y, 'blue', 2); // Gambar garis biru tebal 2 piksel
+                    }
+                });
+            }
+
+            /**
+             * Mengatur ulang semua nilai input di UI ke nilai defaultnya.
+             * Kemudian memicu penggambaran ulang objek 3D.
+             */
+            function reset3D() {
+                // Mengatur ulang nilai input pengaturan kubus ke default
+                document.getElementById('cubeSize').value = 50;
+                document.getElementById('transX').value = 0;
+                document.getElementById('transY').value = 0;
+                document.getElementById('transZ').value = 0;
+                document.getElementById('rotX').value = 0;
+                document.getElementById('rotY').value = 0;
+                document.getElementById('rotZ').value = 0;
+                document.getElementById('scaleX').value = 1;
+                document.getElementById('scaleY').value = 1;
+                document.getElementById('scaleZ').value = 1;
+                
+                // Mengatur ulang nilai input pengaturan kamera/proyeksi ke default
+                document.getElementById('focalLength').value = 250;
+                document.getElementById('perspectiveProj').checked = true; // Default proyeksi ke Perspektif
+                
+                // Memanggil fungsi gambar 3D untuk merender ulang dengan nilai yang direset
+                draw3D(); 
+            }
+
+            // Memanggil fungsi reset3D() saat halaman dimuat pertama kali.
+            // Ini akan menginisialisasi tampilan dengan kubus default dan tabel yang terisi.
+            document.addEventListener('DOMContentLoaded', reset3D);
+        </script>
+    </div>
+</body>
+</html>

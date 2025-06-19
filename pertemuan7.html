@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Algoritma Proyeksi Geometri Bidang</title> <style>
+        /*
+         * CSS Styling untuk tata letak dan elemen halaman.
+         * Bagian ini mendefinisikan presentasi visual dari alat proyeksi interaktif.
+         */
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Mengatur keluarga font yang modern dan bersih. */
+            padding: 20px; /* Menambahkan padding di sekitar seluruh konten body. */
+            background-color: #eef4f8; /* Warna latar belakang halaman (biru-abu muda). */
+            color: #333; /* Warna teks yang lebih gelap untuk keterbacaan yang lebih baik. */
+            line-height: 1.6; /* Meningkatkan jarak antar baris untuk teks. */
+        }
+
+        /* Kontainer untuk menengahkan konten dan membatasi lebarnya. */
+        div[style="max-width: 800px; margin: 0 auto;"] {
+            background-color: #ffffff; /* Latar belakang putih untuk area konten utama. */
+            padding: 30px; /* Padding lebih banyak di dalam kotak konten. */
+            border-radius: 10px; /* Sudut membulat untuk kotak konten. */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Bayangan lembut untuk kedalaman. */
+            margin-bottom: 20px; /* Margin di bagian bawah konten utama. */
+        }
+
+        h2 {
+            text-align: center; /* Menengahkan judul utama. */
+            color: #2c3e50; /* Warna biru gelap untuk judul utama. */
+            margin-bottom: 30px; /* Jarak di bawah judul utama. */
+            border-bottom: 2px solid #3498db; /* Garis bawah biru untuk judul utama. */
+            padding-bottom: 10px; /* Padding di bawah garis bawah. */
+        }
+
+        h3 {
+            color: #34495e; /* Biru gelap sedikit lebih terang untuk subjudul. */
+            margin-top: 25px; /* Jarak di atas subjudul. */
+            margin-bottom: 15px; /* Jarak di bawah subjudul. */
+        }
+
+        .input-group {
+            margin-bottom: 20px; /* Menambahkan spasi di bawah setiap grup kontrol input. */
+            padding: 15px; /* Padding di dalam grup input. */
+            border: 1px solid #dcdcdc; /* Border abu-abu muda untuk grup input. */
+            border-radius: 8px; /* Sudut membulat untuk grup input. */
+            background-color: #fcfcfc; /* Latar belakang sangat terang untuk grup input. */
+        }
+
+        label {
+            display: inline-block; /* Memungkinkan label berada di samping input pada baris yang sama. */
+            margin-right: 15px; /* Spasi antara label dan input. */
+            margin-bottom: 8px; /* Spasi di bawah label saat membungkus. */
+            font-weight: bold; /* Membuat label menjadi tebal. */
+            color: #555; /* Warna abu-abu gelap untuk label. */
+        }
+
+        input[type="number"] {
+            width: 80px; /* Mengatur lebar yang sedikit lebih lebar untuk input angka. */
+            padding: 8px 10px; /* Menambahkan padding di dalam bidang input. */
+            margin: 5px 0; /* Margin vertikal untuk input. */
+            border: 1px solid #ccc; /* Border abu-abu muda untuk input. */
+            border-radius: 5px; /* Sudut membulat untuk input. */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transisi halus untuk efek fokus. */
+        }
+
+        input[type="number"]:focus {
+            border-color: #3498db; /* Border biru saat fokus. */
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); /* Bayangan biru lembut saat fokus. */
+            outline: none; /* Menghilangkan outline default. */
+        }
+
+        .projection-type {
+            margin-bottom: 15px; /* Spasi di bawah tombol radio tipe proyeksi. */
+        }
+
+        .projection-type input[type="radio"] {
+            margin-right: 5px; /* Spasi antara tombol radio dan labelnya. */
+        }
+
+        button {
+            background-color: #3498db; /* Latar belakang biru untuk tombol. */
+            color: white; /* Warna teks putih untuk tombol. */
+            padding: 12px 25px; /* Padding di dalam tombol. */
+            border: none; /* Tanpa border untuk tombol. */
+            border-radius: 5px; /* Sudut membulat untuk tombol. */
+            cursor: pointer; /* Mengubah kursor menjadi pointer saat hover. */
+            font-size: 16px; /* Ukuran font lebih besar untuk tombol. */
+            margin-right: 10px; /* Spasi antara tombol. */
+            margin-top: 10px; /* Spasi di atas tombol. */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Transisi halus untuk efek hover. */
+        }
+
+        button:hover {
+            background-color: #2980b9; /* Biru lebih gelap saat hover. */
+            transform: translateY(-2px); /* Efek sedikit terangkat saat hover. */
+        }
+
+        button:active {
+            background-color: #2471a3; /* Biru lebih gelap lagi saat diklik. */
+            transform: translateY(0); /* Mengatur ulang efek terangkat saat diklik. */
+        }
+
+        canvas {
+            display: block; /* Membuat kanvas menjadi elemen blok untuk mengontrol margin auto. */
+            border: 2px solid #aaddff; /* Border biru muda untuk kanvas. */
+            margin-top: 25px; /* Spasi lebih banyak di atas kanvas. */
+            background: #f0f8ff; /* Latar belakang biru langit muda untuk kanvas. */
+            border-radius: 8px; /* Sudut membulat untuk kanvas. */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Bayangan halus untuk kanvas. */
+            margin-left: auto; /* Menengahkan kanvas secara horizontal. */
+            margin-right: auto; /* Menengahkan kanvas secara horizontal. */
+        }
+
+        .output, .penjelasan-bawah {
+            margin-top: 30px; /* Spasi lebih banyak di atas bagian output dan penjelasan. */
+            background: #f9f9f9; /* Latar belakang abu-abu muda. */
+            padding: 20px; /* Padding lebih banyak. */
+            border: 1px solid #e0e0e0; /* Border lebih terang. */
+            border-radius: 8px; /* Sudut membulat. */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Bayangan lembut. */
+        }
+
+        .penjelasan-bawah {
+            background: #e6f3ff; /* Latar belakang biru lebih terang untuk penjelasan. */
+            border-color: #cce7ff; /* Warna border yang cocok. */
+        }
+
+        table {
+            border-collapse: collapse; /* Menggabungkan border tabel menjadi satu garis. */
+            width: 100%; /* Tabel mengambil lebar penuh dari kontainernya. */
+            margin-top: 15px; /* Spasi di atas tabel. */
+            background-color: #ffffff; /* Latar belakang putih untuk tabel. */
+        }
+
+        table, th, td {
+            border: 1px solid #ddd; /* Border abu-abu muda untuk sel tabel. */
+        }
+
+        th, td {
+            padding: 12px 8px; /* Padding lebih banyak di dalam sel tabel. */
+            text-align: center; /* Menengahkan teks di dalam sel. */
+        }
+
+        th {
+            background-color: #f2f2f2; /* Latar belakang abu-abu muda untuk header tabel. */
+            color: #444; /* Warna teks lebih gelap untuk header. */
+            font-weight: bold; /* Teks tebal untuk header. */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8; /* Striping zebra untuk baris tabel. */
+        }
+
+        pre {
+            background-color: #eee; /* Latar belakang abu-abu muda untuk teks pra-format (kode). */
+            padding: 10px; /* Padding di dalam blok pre. */
+            border-radius: 5px; /* Sudut membulat untuk blok pre. */
+            overflow-x: auto; /* Menambahkan scroll horizontal jika konten terlalu lebar. */
+            font-family: 'Consolas', 'Monaco', monospace; /* Font monospace untuk kode. */
+            font-size: 0.9em; /* Ukuran font sedikit lebih kecil untuk kode. */
+            color: #444; /* Warna teks abu-abu gelap untuk kode. */
+        }
+
+        ul {
+            list-style-type: disc; /* Poin-poin bullet disk default untuk daftar tidak berurutan. */
+            margin-left: 20px; /* Indentasi untuk item daftar. */
+        }
+
+        li strong {
+            color: #0056b3; /* Biru lebih gelap untuk teks tebal di item daftar. */
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 0 auto;"> <h2>Algoritma Proyeksi Geometri Bidang - Interaktif</h2> <div class="input-group"> <h3>Pengaturan Objek 3D (Kubus Sederhana)</h3> <label>Ukuran Kubus: <input type="number" id="cubeSize" value="50"></label> <label>Posisi Tengah X: <input type="number" id="centerX" value="0"></label> <label>Posisi Tengah Y: <input type="number" id="centerY" value="0"></label> <label>Posisi Tengah Z: <input type="number" id="centerZ" value="200"></label> </div>
+
+        <div class="input-group"> <h3>Pengaturan Proyeksi</h3> <div class="projection-type"> <input type="radio" id="orthographic" name="projection" value="orthographic" checked onchange="updateProjection()"> <label for="orthographic">Ortografi</label> <input type="radio" id="perspective" name="projection" value="perspective" onchange="updateProjection()"> <label for="perspective">Perspektif</label> </div>
+            <div id="perspectiveOptions" style="display: none;"> <label>Jarak Kamera (Z): <input type="number" id="cameraZ" value="500"></label> </div>
+        </div>
+
+        <button onclick="drawProjection()">Gambar Proyeksi</button> <button onclick="resetView()">Reset Tampilan</button> <canvas id="projectionCanvas" width="600" height="400"></canvas> <div class="output"> <h3>Titik 3D Asli (Sudut Kubus)</h3> <table id="originalPointsTable"> <thead>
+                    <tr>
+                        <th>#</th> <th>X</th> <th>Y</th> <th>Z</th> </tr>
+                </thead>
+                <tbody>
+                    </tbody> </table>
+
+            <h3>Titik 2D Proyeksi</h3> <table id="projectedPointsTable"> <thead>
+                    <tr>
+                        <th>#</th> <th>X'</th> <th>Y'</th> </tr>
+                </thead>
+                <tbody>
+                    </tbody> </table>
+        </div>
+
+        <div class="penjelasan-bawah"> <strong>Penjelasan Algoritma Proyeksi Geometri Bidang:</strong><br><br> Proyeksi adalah proses mengubah objek 3D menjadi representasi 2D agar dapat ditampilkan pada layar atau dicetak. Ada dua jenis proyeksi utama: <ul>
+                <li>
+                    <strong>Proyeksi Ortografi:</strong> Semua garis proyeksi sejajar dan tegak lurus terhadap bidang proyeksi. Ukuran objek tidak berubah berdasarkan jarak dari kamera. Ini sering digunakan dalam gambar teknik atau arsitektur di mana skala penting. <br>Rumus Proyeksi Ortografi: <pre>
+X' = X
+Y' = Y</pre> </li>
+                <li>
+                    <strong>Proyeksi Perspektif:</strong> Garis proyeksi bertemu pada satu titik (pusat proyeksi atau kamera). Objek yang lebih jauh akan terlihat lebih kecil, memberikan kesan kedalaman yang realistis. <br>Rumus Proyeksi Perspektif Sederhana: <pre>
+faktor_skala = D / (Z + D)
+X' = X * faktor_skala
+Y' = Y * faktor_skala</pre> Di mana `D` adalah jarak kamera dari bidang proyeksi (sering disebut `cameraZ` atau `focalLength`). </li>
+            </ul>
+            Dalam implementasi ini, kita akan memproyeksikan titik-titik sudut kubus dari ruang 3D ke kanvas 2D, yang berfungsi sebagai bidang proyeksi. Kita juga menambahkan translasi sederhana untuk menempatkan titik tengah kubus pada titik tengah kanvas, membuat tampilan lebih intuitif. </div>
+
+        <script>
+            // Mendapatkan referensi ke elemen kanvas dan konteks gambar 2D-nya.
+            const canvas = document.getElementById("projectionCanvas");
+            const ctx = canvas.getContext("2d");
+
+            // Mendapatkan referensi ke elemen tbody dari tabel untuk mengisi data.
+            const originalPointsTableBody = document.querySelector("#originalPointsTable tbody");
+            const projectedPointsTableBody = document.querySelector("#projectedPointsTable tbody");
+
+            let currentProjectionType = 'orthographic'; // Variabel untuk menyimpan tipe proyeksi yang sedang aktif (default: ortografi).
+            let cubePoints3D = []; // Array untuk menyimpan koordinat 3D dari titik sudut kubus.
+            let projectedPoints2D = []; // Array untuk menyimpan koordinat 2D setelah proyeksi.
+
+            /**
+             * Menggambar sebuah titik (lingkaran kecil) di kanvas.
+             * @param {number} x - Koordinat X dari titik.
+             * @param {number} y - Koordinat Y dari titik.
+             * @param {string} color - Warna titik (default: 'red').
+             * @param {number} radius - Radius lingkaran titik (default: 3).
+             */
+            function drawPoint(x, y, color = 'red', radius = 3) {
+                ctx.beginPath(); // Memulai jalur gambar baru.
+                ctx.arc(x, y, radius, 0, Math.PI * 2); // Menggambar busur lingkaran penuh.
+                ctx.fillStyle = color; // Mengatur warna isian.
+                ctx.fill(); // Mengisi lingkaran dengan warna yang ditentukan.
+            }
+
+            /**
+             * Menggambar sebuah garis di kanvas antara dua titik.
+             * @param {number} x1 - Koordinat X dari titik pertama.
+             * @param {number} y1 - Koordinat Y dari titik pertama.
+             * @param {number} x2 - Koordinat X dari titik kedua.
+             * @param {number} y2 - Koordinat Y dari titik kedua.
+             * @param {string} color - Warna garis (default: 'black').
+             * @param {number} width - Ketebalan garis (default: 1).
+             */
+            function drawLine(x1, y1, x2, y2, color = 'black', width = 1) {
+                ctx.beginPath(); // Memulai jalur gambar baru.
+                ctx.moveTo(x1, y1); // Memindahkan "pena" ke titik awal garis.
+                ctx.lineTo(x2, y2); // Menggambar garis ke titik akhir.
+                ctx.strokeStyle = color; // Mengatur warna stroke.
+                ctx.lineWidth = width; // Mengatur ketebalan garis.
+                ctx.stroke(); // Merender garis di kanvas.
+            }
+
+            /**
+             * Menghasilkan 8 titik sudut kubus dalam ruang 3D.
+             * Titik tengah kubus ditentukan oleh (centerX, centerY, centerZ).
+             * @param {number} size - Ukuran sisi kubus.
+             * @param {number} centerX - Koordinat X dari pusat kubus.
+             * @param {number} centerY - Koordinat Y dari pusat kubus.
+             * @param {number} centerZ - Koordinat Z dari pusat kubus.
+             * @returns {Array<Object>} Sebuah array berisi objek titik {x, y, z}.
+             */
+            function generateCubePoints(size, centerX, centerY, centerZ) {
+                const halfSize = size / 2; // Setengah ukuran sisi kubus.
+                const points = []; // Array untuk menyimpan titik-titik yang dihasilkan.
+
+                // Loop bersarang untuk menghasilkan 8 kombinasi (+/- halfSize) untuk X, Y, Z.
+                for (let i = 0; i < 2; i++) { // Untuk koordinat X.
+                    for (let j = 0; j < 2; j++) { // Untuk koordinat Y.
+                        for (let k = 0; k < 2; k++) { // Untuk koordinat Z.
+                            points.push({
+                                x: centerX + (i === 0 ? -halfSize : halfSize), // Menghitung koordinat X dari titik sudut.
+                                y: centerY + (j === 0 ? -halfSize : halfSize), // Menghitung koordinat Y dari titik sudut.
+                                z: centerZ + (k === 0 ? -halfSize : halfSize)  // Menghitung koordinat Z dari titik sudut.
+                            });
+                        }
+                    }
+                }
+                return points; // Mengembalikan array titik sudut kubus.
+            }
+
+            /**
+             * Melakukan proyeksi 3D ke 2D menggunakan rumus Proyeksi Ortografi.
+             * Rumus: X' = X, Y' = Y
+             * @param {Object} point3D - Objek titik 3D {x, y, z}.
+             * @returns {Object} Objek titik 2D yang diproyeksikan {x, y}.
+             */
+            function projectOrthographic(point3D) {
+                return {
+                    x: point3D.x, // Koordinat X yang diproyeksikan hanyalah X 3D.
+                    y: point3D.y  // Koordinat Y yang diproyeksikan hanyalah Y 3D.
+                };
+            }
+
+            /**
+             * Melakukan proyeksi 3D ke 2D menggunakan rumus Proyeksi Perspektif sederhana.
+             * Rumus: scale_factor = D / (Z + D), X' = X * scale_factor, Y' = Y * scale_factor
+             * @param {Object} point3D - Objek titik 3D {x, y, z}.
+             * @param {number} cameraZ - Jarak kamera dari bidang proyeksi (nilai D).
+             * @returns {Object} Objek titik 2D yang diproyeksikan {x, y}.
+             */
+            function projectPerspective(point3D, cameraZ) {
+                // Pastikan (Z + cameraZ) tidak nol atau terlalu kecil untuk menghindari pembagian dengan nol.
+                // Jika hasilnya nol, atur ke nilai yang sangat kecil (0.0001) untuk mencegah kesalahan.
+                // Ini memastikan bahwa objek yang tepat di posisi Z kamera masih mendapatkan skala yang valid (meskipun sangat besar).
+                const divisor = point3D.z + cameraZ;
+                const zFactor = (divisor === 0) ? 0.0001 : (cameraZ / divisor);
+
+                return {
+                    x: point3D.x * zFactor, // Koordinat X yang diproyeksikan diskalakan oleh faktor kedalaman.
+                    y: point3D.y * zFactor  // Koordinat Y yang diproyeksikan diskalakan oleh faktor kedalaman.
+                };
+            }
+
+            /**
+             * Menggambar kubus yang diproyeksikan di kanvas.
+             * Fungsi ini menggunakan titik-titik 2D yang telah dihitung sebelumnya.
+             * @param {Array<Object>} projectedPoints - Array objek titik 2D {x, y}.
+             * @param {number} offsetX - Offset X untuk menengahkan objek di kanvas (biasanya setengah lebar kanvas).
+             * @param {number} offsetY - Offset Y untuk menengahkan objek di kanvas (biasanya setengah tinggi kanvas).
+             */
+            function drawProjectedCube(projectedPoints, offsetX, offsetY) {
+                // Mendefinisikan koneksi antar titik untuk membentuk sisi-sisi kubus (indeks dari array projectedPoints).
+                // Ini mewakili 12 sisi kubus.
+                const edges = [
+                    // Sisi depan
+                    [0, 1], [1, 3], [3, 2], [2, 0],
+                    // Sisi belakang
+                    [4, 5], [5, 7], [7, 6], [6, 4],
+                    // Sisi penghubung antara sisi depan dan belakang
+                    [0, 4], [1, 5], [2, 6], [3, 7]
+                ];
+
+                // Menggambar setiap sisi kubus.
+                edges.forEach(edge => {
+                    const p1 = projectedPoints[edge[0]]; // Titik pertama dari sisi.
+                    const p2 = projectedPoints[edge[1]]; // Titik kedua dari sisi.
+                    // Menggambar garis, menerapkan offset untuk memposisikan kubus di tengah kanvas.
+                    drawLine(p1.x + offsetX, p1.y + offsetY, p2.x + offsetX, p2.y + offsetY);
+                });
+
+                // Menggambar setiap titik yang diproyeksikan sebagai lingkaran biru kecil.
+                projectedPoints.forEach(p => {
+                    // Menggambar titik, menerapkan offset untuk memposisikannya di tengah kanvas.
+                    drawPoint(p.x + offsetX, p.y + offsetY, 'blue', 4);
+                });
+            }
+
+            /**
+             * Memperbarui tabel yang menampilkan koordinat 3D asli dari titik sudut kubus.
+             */
+            function updateOriginalPointsTable() {
+                originalPointsTableBody.innerHTML = ''; // Membersihkan konten tabel sebelumnya.
+                // Iterasi setiap titik 3D dan menambahkannya ke tabel.
+                cubePoints3D.forEach((p, index) => {
+                    const row = originalPointsTableBody.insertRow(); // Membuat baris baru di tabel.
+                    row.insertCell().textContent = index; // Sel untuk indeks titik.
+                    row.insertCell().textContent = p.x.toFixed(2); // Sel untuk X (dibulatkan menjadi 2 desimal).
+                    row.insertCell().textContent = p.y.toFixed(2); // Sel untuk Y (dibulatkan menjadi 2 desimal).
+                    row.insertCell().textContent = p.z.toFixed(2); // Sel untuk Z (dibulatkan menjadi 2 desimal).
+                });
+            }
+
+            /**
+             * Memperbarui tabel yang menampilkan koordinat 2D dari titik-titik yang diproyeksikan.
+             */
+            function updateProjectedPointsTable() {
+                projectedPointsTableBody.innerHTML = ''; // Membersihkan konten tabel sebelumnya.
+                // Iterasi setiap titik proyeksi 2D dan menambahkannya ke tabel.
+                projectedPoints2D.forEach((p, index) => {
+                    const row = projectedPointsTableBody.insertRow(); // Membuat baris baru di tabel.
+                    row.insertCell().textContent = index; // Sel untuk indeks titik.
+                    row.insertCell().textContent = p.x.toFixed(2); // Sel untuk X' (dibulatkan menjadi 2 desimal).
+                    row.insertCell().textContent = p.y.toFixed(2); // Sel untuk Y' (dibulatkan menjadi 2 desimal).
+                });
+            }
+
+            /**
+             * Fungsi utama yang mengoordinasikan proses penggambaran proyeksi.
+             * 1. Mengambil nilai parameter dari input pengguna.
+             * 2. Menghasilkan titik-titik 3D dari kubus.
+             * 3. Melakukan proyeksi titik-titik 3D ke 2D sesuai dengan tipe proyeksi yang dipilih.
+             * 4. Menggambar hasil proyeksi (kubus) di kanvas.
+             * 5. Memperbarui tabel informasi titik.
+             */
+            function drawProjection() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Membersihkan seluruh area kanvas sebelum menggambar ulang.
+
+                // Mengambil nilai dari input dan mengubahnya menjadi angka floating-point.
+                const size = parseFloat(document.getElementById('cubeSize').value);
+                const centerX = parseFloat(document.getElementById('centerX').value);
+                const centerY = parseFloat(document.getElementById('centerY').value);
+                const centerZ = parseFloat(document.getElementById('centerZ').value); // Koordinat Z dari objek (kedalaman).
+
+                // Menghasilkan 8 titik sudut kubus dalam ruang 3D.
+                cubePoints3D = generateCubePoints(size, centerX, centerY, centerZ);
+
+                projectedPoints2D = []; // Mengosongkan array titik yang diproyeksikan.
+                const cameraZ = parseFloat(document.getElementById('cameraZ').value); // Mengambil jarak kamera (untuk proyeksi perspektif).
+
+                // Iterasi setiap titik 3D dari kubus.
+                cubePoints3D.forEach(p => {
+                    if (currentProjectionType === 'orthographic') {
+                        // Jika proyeksi ortografi, gunakan fungsi projectOrthographic.
+                        projectedPoints2D.push(projectOrthographic(p));
+                    } else { // Jika proyeksi perspektif.
+                        // Gunakan fungsi projectPerspective dengan jarak kamera.
+                        projectedPoints2D.push(projectPerspective(p, cameraZ));
+                    }
+                });
+
+                // Menghitung offset untuk menengahkan objek di kanvas.
+                const offsetX = canvas.width / 2;
+                const offsetY = canvas.height / 2;
+
+                // Menggambar kubus yang diproyeksikan di kanvas.
+                drawProjectedCube(projectedPoints2D, offsetX, offsetY);
+
+                // Memperbarui tabel di halaman.
+                updateOriginalPointsTable();
+                updateProjectedPointsTable();
+            }
+
+            /**
+             * Mengatur ulang semua parameter input ke nilai default-nya
+             * dan kemudian memicu penggambaran ulang proyeksi.
+             */
+            function resetView() {
+                // Mengatur nilai default untuk setiap input.
+                document.getElementById('cubeSize').value = 50;
+                document.getElementById('centerX').value = 0;
+                document.getElementById('centerY').value = 0;
+                document.getElementById('centerZ').value = 200;
+                document.getElementById('cameraZ').value = 500;
+                document.getElementById('orthographic').checked = true; // Memilih tombol radio ortografi.
+                updateProjection(); // Memanggil fungsi untuk memperbarui tampilan opsi proyeksi (sembunyikan opsi perspektif).
+                drawProjection(); // Memanggil fungsi untuk menggambar ulang dengan pengaturan default.
+            }
+
+            /**
+             * Memperbarui tampilan antarmuka pengguna berdasarkan tipe proyeksi yang dipilih.
+             * Ini akan menyembunyikan atau menampilkan input 'Jarak Kamera (Z)' yang hanya relevan untuk proyeksi perspektif.
+             */
+            function updateProjection() {
+                // Mendapatkan nilai tombol radio yang saat ini dipilih (ortografi atau perspektif).
+                currentProjectionType = document.querySelector('input[name="projection"]:checked').value;
+                const perspectiveOptions = document.getElementById('perspectiveOptions'); // Referensi ke div opsi perspektif.
+
+                if (currentProjectionType === 'perspective') {
+                    perspectiveOptions.style.display = 'block'; // Menampilkan div opsi perspektif.
+                } else {
+                    perspectiveOptions.style.display = 'none'; // Menyembunyikan div opsi perspektif.
+                }
+                drawProjection(); // Memanggil drawProjection() setiap kali tipe proyeksi diubah untuk memperbarui tampilan segera.
+            }
+
+            // Menginisialisasi tampilan awal saat halaman pertama kali dimuat.
+            resetView();
+        </script>
+    </div>
+</body>
+</html>

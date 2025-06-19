@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Algoritma Pewarnaan Graf Bipartit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h2, h3 {
+            color: #0056b3;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="number"], input[type="color"] {
+            width: 80px;
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        canvas {
+            border: 2px solid #000;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9e9e9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .input-group label {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff; /* Warna biru untuk tombol aksi */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #0056b3; /* Biru lebih gelap saat hover */
+        }
+        .output, .penjelasan-bawah {
+            margin-top: 25px;
+            background: #ffffff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .penjelasan-bawah {
+            background: #e0f7fa;
+            border-color: #b2ebf2;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #c0c0c0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .color-display {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        #bipartiteStatus {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        #bipartiteStatus.is-bipartite {
+            color: #28a745; /* Hijau */
+        }
+        #bipartiteStatus.not-bipartite {
+            color: #dc3545; /* Merah */
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 0 auto;">
+        <h2>Algoritma Pewarnaan Graf Bipartit</h2>
+
+        <div class="input-group">
+            <button onclick="drawGraph()">Gambar Graf</button>
+            <button onclick="checkAndColorBipartite()">Cek & Warnai Bipartit</button>
+            <button onclick="resetCanvas()">Reset Kanvas</button>
+        </div>
+
+        <canvas id="bipartiteCanvas" width="600" height="400"></canvas>
+
+        <div class="output">
+            <h3>Struktur Graf & Hasil Pewarnaan</h3>
+            <p id="bipartiteStatus">Status: Belum dicek</p>
+            <table id="graphInfoTable">
+                <thead>
+                    <tr>
+                        <th>Simpul (Node)</th>
+                        <th>Posisi (X,Y)</th>
+                        <th>Tetangga</th>
+                        <th>Warna Diberikan</th>
+                        <th>Warna Tampilan</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Pewarnaan Graf Bipartit:</strong><br><br>
+            Graf Bipartit adalah graf yang simpul-simpulnya dapat dibagi menjadi dua himpunan (misalnya, himpunan U dan himpunan V) sedemikian rupa sehingga setiap sisi hanya menghubungkan simpul dari himpunan U ke simpul dari himpunan V. Dengan kata lain, **tidak ada sisi yang menghubungkan dua simpul dalam himpunan yang sama.** Graf bipartit **selalu dapat diwarnai dengan 2 warna.**
+
+            <br><br>Algoritma untuk mengecek dan mewarnai graf bipartit (menggunakan Breadth-First Search/BFS):
+            <ol>
+                <li>Inisialisasi semua simpul sebagai **belum diwarnai**.</li>
+                <li>Pilih sembarang simpul yang belum diwarnai, berikan warna pertama (misal, **Set 1 / Biru**). Masukkan simpul ini ke dalam antrean (queue).</li>
+                <li>Selama antrean tidak kosong:
+                    <ul>
+                        <li>Ambil simpul dari depan antrean.</li>
+                        <li>Untuk setiap **tetangga** dari simpul yang diambil:
+                            <ul>
+                                <li>Jika tetangga tersebut **belum diwarnai**: Berikan warna yang **berbeda** dari simpul saat ini (misal, jika simpul saat ini Biru, tetangga Merah). Masukkan tetangga tersebut ke dalam antrean.</li>
+                                <li>Jika tetangga tersebut **sudah diwarnai** dan warnanya **sama** dengan simpul saat ini: Graf ini **bukan bipartit**. Algoritma berhenti.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>Ulangi langkah 2-3 untuk simpul lain yang mungkin belum diwarnai (jika graf memiliki komponen terhubung yang terpisah).</li>
+            </ol>
+            <br>
+            Jika algoritma selesai tanpa menemukan konflik warna, maka graf tersebut adalah **bipartit**, dan telah berhasil diwarnai dengan dua set warna.
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("bipartiteCanvas");
+        const ctx = canvas.getContext("2d");
+        const graphInfoTableBody = document.querySelector("#graphInfoTable tbody");
+        const bipartiteStatusSpan = document.getElementById("bipartiteStatus");
+
+        // Palet warna untuk Set 1 dan Set 2
+        const COLOR_SET_1 = '#007BFF'; // Biru
+        const COLOR_SET_2 = '#DC3545'; // Merah
+        const DEFAULT_COLOR = '#DDD'; // Abu-abu default
+        const NODE_RADIUS = 20;
+
+        // Struktur data untuk graf:
+        // 'id': ID unik simpul
+        // 'x', 'y': Posisi simpul di kanvas
+        // 'neighbors': Array ID simpul tetangga
+        // 'color': Warna (SET_1, SET_2, atau null/DEFAULT_COLOR) yang diberikan algoritma
+        // 'visited': Status kunjungan untuk BFS
+        let nodes = [
+            // Contoh Graf Bipartit
+            { id: 'A', x: 100, y: 100, neighbors: ['B', 'D'], color: null, visited: false },
+            { id: 'B', x: 250, y: 50, neighbors: ['A', 'C'], color: null, visited: false },
+            { id: 'C', x: 400, y: 100, neighbors: ['B', 'E'], color: null, visited: false },
+            { id: 'D', x: 150, y: 250, neighbors: ['A', 'E'], color: null, visited: false },
+            { id: 'E', x: 300, y: 300, neighbors: ['C', 'D'], color: null, visited: false },
+            { id: 'F', x: 450, y: 250, neighbors: ['C'], color: null, visited: false }
+            
+            // Contoh Graf BUKAN Bipartit (jika ingin mencoba, uncomment dan comment contoh di atas)
+            // { id: 'A', x: 100, y: 100, neighbors: ['B', 'C'], color: null, visited: false },
+            // { id: 'B', x: 250, y: 50, neighbors: ['A', 'C'], color: null, visited: false },
+            // { id: 'C', x: 400, y: 100, neighbors: ['A', 'B'], color: null, visited: false } 
+            
+            // Contoh Graf Bipartit dengan komponen terpisah
+            // { id: 'N1', x: 100, y: 100, neighbors: ['N2'], color: null, visited: false },
+            // { id: 'N2', x: 200, y: 100, neighbors: ['N1'], color: null, visited: false },
+            // { id: 'N3', x: 350, y: 100, neighbors: ['N4'], color: null, visited: false },
+            // { id: 'N4', x: 450, y: 100, neighbors: ['N3'], color: null, visited: false }
+        ];
+
+        /**
+         * Menggambar sebuah simpul (node) pada kanvas.
+         */
+        function drawNode(node, displayColor = DEFAULT_COLOR) {
+            // Gambar lingkaran simpul
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = displayColor;
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Gambar ID simpul di tengah
+            ctx.fillStyle = '#FFF'; // Warna teks putih
+            if (displayColor === '#FFF' || displayColor === '#DDD') { // Jika warna simpul terang, teks hitam
+                ctx.fillStyle = '#333';
+            }
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(node.id, node.x, node.y);
+        }
+
+        /**
+         * Menggambar sebuah sisi (edge) antara dua simpul pada kanvas.
+         */
+        function drawEdge(node1, node2) {
+            ctx.beginPath();
+            ctx.moveTo(node1.x, node1.y);
+            ctx.lineTo(node2.x, node2.y);
+            ctx.strokeStyle = '#666'; // Warna sisi abu-abu
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        /**
+         * Menggambar seluruh graf (simpul dan sisi) di kanvas.
+         */
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan kanvas
+
+            // Gambar sisi-sisi terlebih dahulu agar tidak menutupi simpul
+            nodes.forEach(node => {
+                node.neighbors.forEach(neighborId => {
+                    const neighborNode = nodes.find(n => n.id === neighborId);
+                    // Pastikan sisi digambar hanya sekali (misal: A-B, bukan juga B-A)
+                    if (neighborNode && node.id < neighborNode.id) {
+                        drawEdge(node, neighborNode);
+                    }
+                });
+            });
+
+            // Gambar simpul-simpul
+            nodes.forEach(node => {
+                drawNode(node, node.color || DEFAULT_COLOR); // Gunakan warna yang diberikan atau warna default
+            });
+
+            updateGraphInfoTable(); // Perbarui tabel informasi graf
+        }
+
+        /**
+         * Mereset kanvas dan status pewarnaan simpul ke kondisi awal.
+         */
+        function resetCanvas() {
+            nodes.forEach(node => {
+                node.color = null; // Hapus warna yang diberikan
+                node.visited = false; // Reset status kunjungan
+            });
+            bipartiteStatusSpan.textContent = "Status: Belum dicek";
+            bipartiteStatusSpan.className = ''; // Hapus kelas status warna
+            drawGraph(); // Gambar ulang graf dengan warna default
+        }
+
+        /**
+         * Mengimplementasikan algoritma BFS untuk mengecek dan mewarnai graf bipartit.
+         */
+        function checkAndColorBipartite() {
+            resetCanvas(); // Pastikan graf bersih dari pewarnaan sebelumnya
+
+            let isBipartite = true; // Asumsi awal: graf adalah bipartit
+
+            // Loop melalui semua node untuk menangani graf yang mungkin terputus (memiliki beberapa komponen terhubung)
+            for (const startNode of nodes) {
+                if (!startNode.color) { // Jika node belum diwarnai (belum dikunjungi dalam BFS)
+                    const queue = []; // Antrean untuk BFS
+                    queue.push(startNode);
+                    startNode.color = COLOR_SET_1; // Beri warna pertama
+                    startNode.visited = true; // Tandai sudah dikunjungi
+
+                    while (queue.length > 0) {
+                        const u = queue.shift(); // Ambil node dari depan antrean
+
+                        for (const neighborId of u.neighbors) {
+                            const v = nodes.find(n => n.id === neighborId); // Temukan node tetangga
+
+                            if (v) { // Pastikan tetangga ditemukan
+                                if (!v.color) { // Jika tetangga belum diwarnai
+                                    // Berikan warna yang berlawanan dengan warna node 'u'
+                                    v.color = (u.color === COLOR_SET_1) ? COLOR_SET_2 : COLOR_SET_1;
+                                    v.visited = true; // Tandai dikunjungi
+                                    queue.push(v); // Masukkan tetangga ke antrean
+                                } else if (v.color === u.color) {
+                                    // Jika tetangga sudah diwarnai DAN warnanya SAMA dengan node 'u'
+                                    // Ini berarti ada sisi yang menghubungkan dua node dengan warna yang sama,
+                                    // sehingga graf ini BUKAN bipartit
+                                    isBipartite = false;
+                                    break; // Hentikan pengecekan tetangga untuk node 'u'
+                                }
+                            }
+                        }
+                        if (!isBipartite) break; // Hentikan BFS jika sudah ditemukan bukan bipartit
+                    }
+                }
+                if (!isBipartite) break; // Hentikan loop utama jika sudah ditemukan bukan bipartit
+            }
+
+            // Perbarui status tampilan
+            if (isBipartite) {
+                bipartiteStatusSpan.textContent = "Status: Graf ini adalah Bipartit!";
+                bipartiteStatusSpan.className = 'is-bipartite';
+            } else {
+                bipartiteStatusSpan.textContent = "Status: Graf ini BUKAN Bipartit!";
+                bipartiteStatusSpan.className = 'not-bipartite';
+            }
+
+            drawGraph(); // Gambar ulang graf dengan warna akhir
+        }
+
+        /**
+         * Memperbarui tampilan tabel informasi graf.
+         */
+        function updateGraphInfoTable() {
+            graphInfoTableBody.innerHTML = ''; // Kosongkan isi tabel sebelumnya
+            nodes.forEach(node => {
+                const row = graphInfoTableBody.insertRow();
+                row.insertCell().textContent = node.id; // ID Simpul
+                row.insertCell().textContent = `(${node.x}, ${node.y})`; // Posisi Simpul
+                row.insertCell().textContent = node.neighbors.length > 0 ? node.neighbors.join(', ') : '-'; // Tetangga
+
+                // Teks warna yang diberikan oleh algoritma
+                const algoColorText = node.color ? (node.color === COLOR_SET_1 ? 'Set 1' : 'Set 2') : 'Belum diwarnai';
+                row.insertCell().textContent = algoColorText;
+
+                // Tampilkan kotak warna visual
+                const colorCell = row.insertCell();
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-display';
+                colorBox.style.backgroundColor = node.color || DEFAULT_COLOR; // Warna kotak sesuai warna simpul atau default
+                colorCell.appendChild(colorBox);
+            });
+        }
+
+        // Inisialisasi awal saat halaman dimuat
+        resetCanvas();
+    </script>
+</body>
+</html>

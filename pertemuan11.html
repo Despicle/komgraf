@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Algoritma Anti-Aliasing (Super-sampling)</title>
+    <style>
+        /* Gaya dasar untuk body: font, padding, dan warna latar belakang */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font yang lebih modern */
+            padding: 20px; 
+            background: linear-gradient(to right, #ece9e6, #ffffff); /* Latar belakang gradien lembut */
+            color: #333; /* Warna teks utama */
+        }
+        /* Gaya untuk header h2 */
+        h2 {
+            color: #2c3e50; /* Warna judul yang lebih gelap */
+            border-bottom: 2px solid #3498db; /* Garis bawah biru */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        /* Gaya untuk elemen input angka */
+        input[type="number"] { 
+            width: 70px; /* Lebar sedikit diperbesar */
+            padding: 8px; /* Padding untuk kenyamanan input */
+            margin: 5px; /* Margin di sekitar input */
+            border: 1px solid #ccc; /* Border standar */
+            border-radius: 4px; /* Sudut membulat */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Bayangan dalam untuk efek kedalaman */
+        }
+        /* Gaya untuk elemen checkbox */
+        input[type="checkbox"] {
+            margin-left: 10px;
+            transform: scale(1.2); /* Perbesar checkbox sedikit */
+        }
+        /* Gaya untuk elemen canvas */
+        canvas { 
+            border: 2px solid #2c3e50; /* Border lebih tebal dan gelap */
+            margin-top: 25px; /* Margin atas */
+            background: #ffffff; /* Latar belakang putih bersih */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Bayangan lebih jelas untuk canvas */
+            display: block; /* Memastikan canvas mengambil baris penuh */
+            margin-left: auto; /* Pusatkan canvas */
+            margin-right: auto;
+        }
+        /* Gaya untuk grup input */
+        .input-group { 
+            margin-bottom: 20px; /* Margin bawah */
+            padding: 15px; /* Padding internal */
+            background: #eaf6fd; /* Latar belakang biru sangat terang */
+            border-radius: 8px; /* Sudut membulat */
+            border: 1px solid #b3e0ff; /* Border biru muda */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* Bayangan lembut */
+        }
+        .input-group label {
+            font-weight: bold; /* Teks label tebal */
+            color: #4a69bd; /* Warna label yang sedikit berbeda */
+            margin-right: 10px;
+            display: inline-block; /* Agar label dan input sejajar */
+            margin-bottom: 8px;
+        }
+        /* Gaya untuk tombol */
+        button {
+            padding: 10px 20px; /* Padding tombol */
+            background-color: #3498db; /* Warna biru tombol */
+            color: white; /* Warna teks putih */
+            border: none; /* Tanpa border */
+            border-radius: 5px; /* Sudut membulat */
+            cursor: pointer; /* Kursor pointer */
+            font-size: 16px; /* Ukuran font tombol */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Transisi halus */
+            margin-right: 10px; /* Margin antar tombol */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Bayangan tombol */
+        }
+        button:hover {
+            background-color: #2980b9; /* Warna biru lebih gelap saat hover */
+            transform: translateY(-2px); /* Efek angkat sedikit saat hover */
+        }
+        button:active {
+            transform: translateY(0); /* Kembali ke posisi semula saat diklik */
+        }
+        /* Gaya untuk bagian penjelasan */
+        .penjelasan-bawah {
+            margin-top: 30px; /* Margin atas lebih besar */
+            background: #ffffff; /* Latar belakang putih */
+            padding: 20px; /* Padding lebih besar */
+            border: 1px solid #dcdcdc; /* Border abu-abu */
+            border-radius: 8px; /* Sudut membulat */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.07); /* Bayangan yang lebih menonjol */
+        }
+        .penjelasan-bawah strong {
+            color: #2c3e50; /* Warna teks tebal */
+        }
+        .penjelasan-bawah ol, .penjelasan-bawah ul {
+            margin-top: 10px;
+            margin-left: 20px;
+            line-height: 1.6; /* Spasi baris untuk keterbacaan */
+        }
+        .penjelasan-bawah pre {
+            background-color: #ecf0f1; /* Latar belakang kode yang lebih lembut */
+            padding: 12px;
+            border-left: 4px solid #3498db; /* Garis vertikal biru */
+            font-family: 'Fira Code', 'Cascadia Code', monospace; /* Font monospasi yang bagus */
+            overflow-x: auto; /* Scroll horizontal untuk kode panjang */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h2>Algoritma Anti-Aliasing (Super-sampling) - Interaktif</h2>
+
+        <div class="input-group">
+            <h3>Pengaturan Garis</h3>
+            <label>X1: <input type="number" id="lineX1" value="50" title="Koordinat X awal garis"></label>
+            <label>Y1: <input type="number" id="lineY1" value="100" title="Koordinat Y awal garis"></label><br>
+            <label>X2: <input type="number" id="lineX2" value="400" title="Koordinat X akhir garis"></label>
+            <label>Y2: <input type="number" id="lineY2" value="250" title="Koordinat Y akhir garis"></label>
+        </div>
+
+        <div class="input-group">
+            <h3>Pengaturan Anti-Aliasing (Super-sampling)</h3>
+            <label>Faktor Super-sampling (N x N): 
+                <input type="number" id="superSamplingFactor" value="2" min="1" title="Faktor super-sampling. N=1 (Tidak ada AA), N=2 (2x2), N=3 (3x3), dst."></label><br>
+            <label>Tampilkan Piksel Mentah: 
+                <input type="checkbox" id="showRawPixels" title="Centang untuk melihat garis aliased asli (biru) di samping garis anti-aliased."></label>
+        </div>
+
+        <button onclick="drawAliasedAndAntiAliased()">Gambar Garis</button>
+        <button onclick="resetValues()">Reset</button>
+
+        <canvas id="antiAliasingCanvas" width="600" height="400"></canvas>
+
+        <div class="penjelasan-bawah">
+            <strong>Penjelasan Algoritma Anti-Aliasing (Super-sampling):</strong><br><br>
+            **Aliasing** adalah efek "jagged" atau tangga yang terlihat pada tepi garis miring atau kurva saat digambar pada layar piksel. Ini terjadi karena piksel adalah kotak diskrit, dan sistem harus memutuskan piksel mana yang harus diaktifkan untuk merepresentasikan suatu bentuk. Bayangkan mencoba menggambar garis diagonal di atas kertas grafik raksasa dengan hanya mengisi kotak penuh; hasilnya akan terlihat bergerigi.
+
+            **Anti-aliasing** adalah teknik yang digunakan dalam grafika komputer untuk mengurangi efek aliasing ini, membuat tepi objek terlihat lebih halus dan alami. Salah satu metode yang paling intuitif dan efektif adalah **Super-sampling (atau Over-sampling)**.
+
+            <br>Cara kerja Super-sampling:
+            <ol>
+                <li>Gambar adegan (misalnya, garis) pada **resolusi yang jauh lebih tinggi** daripada resolusi target layar yang sebenarnya. Jika faktor super-sampling adalah **N**, maka setiap piksel layar akan diwakili oleh **N x N sub-piksel** dalam kanvas "virtual" beresolusi tinggi ini.</li>
+                <li>Setelah menggambar pada resolusi tinggi, untuk setiap piksel di resolusi layar target, **hitung rata-rata warna** dari semua N x N sub-piksel yang jatuh di dalamnya. Ini adalah proses "down-sampling".</li>
+                <li>Atur warna piksel layar target dengan warna rata-rata ini.</li>
+            </ol>
+            Hasilnya adalah piksel di tepi objek tidak lagi hanya "hitam" atau "putih", tetapi akan memiliki warna campuran (skala abu-abu untuk garis hitam di latar putih). Ini menciptakan transisi warna yang mulus, menipu mata untuk melihat tepi yang lebih halus dan menghilangkan efek tangga. Semakin tinggi faktor super-sampling (N), semakin halus hasilnya, tetapi semakin tinggi juga biaya komputasinya karena lebih banyak sub-piksel yang harus dihitung dan dirata-ratakan.
+
+            Dalam implementasi ini, kita akan menggambar garis dua kali: sekali tanpa anti-aliasing (opsional, untuk menunjukkan efek aliasing) dan sekali dengan super-sampling. Anda dapat mengamati perbedaannya dengan membandingkan ketajaman dan kehalusan tepi garis, terutama pada kemiringan.
+        </div>
+
+        <script>
+            // Mendapatkan elemen canvas dari DOM
+            const canvas = document.getElementById("antiAliasingCanvas");
+            // Mendapatkan konteks gambar 2D dari canvas.
+            // Opsi { willReadFrequently: true } memberi tahu browser bahwa kita akan sering membaca data piksel
+            // (dengan getImageData), yang bisa mengoptimalkan performa.
+            const ctx = canvas.getContext("2d", { willReadFrequently: true }); 
+
+            /**
+             * Fungsi untuk menggambar piksel individual pada konteks canvas utama.
+             * Ini adalah fungsi dasar untuk "mewarnai" sebuah titik di layar.
+             * @param {number} x - Koordinat X piksel (integer).
+             * @param {number} y - Koordinat Y piksel (integer).
+             * @param {string} color - Warna piksel (misal: "rgba(0,0,0,1)").
+             */
+            function drawPixel(x, y, color) {
+                ctx.fillStyle = color; // Mengatur warna isi untuk piksel
+                ctx.fillRect(x, y, 1, 1); // Menggambar persegi panjang 1x1 piksel
+            }
+
+            /**
+             * Menggambar garis menggunakan algoritma DDA sederhana untuk tujuan demonstrasi aliasing.
+             * Fungsi ini akan menghasilkan efek "tangga" atau "jagged" khas aliasing
+             * karena hanya mengaktifkan piksel penuh.
+             * @param {number} x1 - Koordinat X titik awal.
+             * @param {number} y1 - Koordinat Y titik awal.
+             * @param {number} x2 - Koordinat X titik akhir.
+             * @param {number} y2 - Koordinat Y titik akhir.
+             * @param {string} color - Warna garis (misal: "rgba(0,0,255,0.8)").
+             */
+            function drawLineAliased(x1, y1, x2, y2, color) {
+                const dx = x2 - x1; // Perubahan di sumbu X
+                const dy = y2 - y1; // Perubahan di sumbu Y
+
+                let steps; // Jumlah langkah (piksel) yang akan digambar
+                // Menentukan steps berdasarkan perubahan terbesar (abs) antara dx dan dy
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    steps = Math.abs(dx);
+                } else {
+                    steps = Math.abs(dy);
+                }
+
+                // Menghitung inkremen (perubahan) per langkah untuk X dan Y
+                const xIncrement = dx / steps;
+                const yIncrement = dy / steps;
+
+                let x = x1; // Koordinat X saat ini, dimulai dari x1
+                let y = y1; // Koordinat Y saat ini, dimulai dari y1
+
+                // Loop untuk menggambar setiap piksel di sepanjang garis
+                for (let i = 0; i <= steps; i++) {
+                    // Menggambar piksel pada koordinat integer terdekat
+                    // Ini yang menyebabkan efek aliasing (hanya piksel penuh)
+                    drawPixel(Math.round(x), Math.round(y), color);
+                    
+                    x += xIncrement; // Perbarui X untuk langkah berikutnya
+                    y += yIncrement; // Perbarui Y untuk langkah berikutnya
+                }
+            }
+
+            /**
+             * Menggambar garis dengan anti-aliasing menggunakan teknik super-sampling.
+             * Ini melibatkan rendering garis pada resolusi yang lebih tinggi secara internal,
+             * lalu merata-ratakan warna sub-piksel untuk menghasilkan piksel akhir yang lebih halus.
+             * @param {number} x1 - Koordinat X titik awal garis.
+             * @param {number} y1 - Koordinat Y titik awal garis.
+             * @param {number} x2 - Koordinat X titik akhir garis.
+             * @param {number} y2 - Koordinat Y titik akhir garis.
+             * @param {number} N - Faktor super-sampling (misal 2 untuk 2x2 sub-piksel).
+             * @param {string} lineColor - Warna garis (misal "black").
+             */
+            function drawLineAntiAliased(x1, y1, x2, y2, N, lineColor = "black") {
+                // Hitung dimensi kanvas sementara beresolusi super
+                const superResWidth = canvas.width * N;
+                const superResHeight = canvas.height * N;
+
+                // Buat kanvas sementara di memori untuk menggambar pada resolusi tinggi
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = superResWidth;
+                tempCanvas.height = superResHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Isi latar belakang kanvas sementara dengan putih (warna latar default)
+                tempCtx.fillStyle = '#fff';
+                tempCtx.fillRect(0, 0, superResWidth, superResHeight);
+
+                // Gambar garis pada kanvas sementara dengan resolusi tinggi.
+                // Koordinat titik garis diskalakan (dikali N) untuk cocok dengan resolusi super.
+                tempCtx.beginPath(); // Memulai jalur gambar
+                tempCtx.moveTo(x1 * N, y1 * N); // Titik awal diskalakan
+                tempCtx.lineTo(x2 * N, y2 * N); // Titik akhir diskalakan
+                tempCtx.strokeStyle = lineColor; // Warna garis
+                tempCtx.lineWidth = 1; // Lebar garis 1 piksel di super-res (penting untuk perhitungan sub-piksel)
+                tempCtx.stroke(); // Menggambar garis
+
+                // Dapatkan semua data piksel dari kanvas super-res.
+                // Ini akan berisi informasi RGBa untuk setiap sub-piksel.
+                const imageData = tempCtx.getImageData(0, 0, superResWidth, superResHeight);
+                const pixels = imageData.data; // Array 1D yang berisi [R, G, B, A, R, G, B, A, ...]
+
+                // Iterasi melalui setiap piksel di kanvas target (asli)
+                for (let y = 0; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        let totalR = 0, totalG = 0, totalB = 0, totalA = 0; // Akumulator warna
+                        let count = 0; // Penghitung sub-piksel
+
+                        // Ambil N x N sub-piksel yang sesuai dengan piksel layar saat ini
+                        for (let sy = 0; sy < N; sy++) {
+                            for (let sx = 0; sx < N; sx++) {
+                                // Hitung koordinat sub-piksel di kanvas super-res
+                                const subPixelX = (x * N) + sx;
+                                const subPixelY = (y * N) + sy;
+
+                                // Hitung indeks dalam array pixels (setiap piksel 4 byte: R, G, B, A)
+                                const index = (subPixelY * superResWidth + subPixelX) * 4;
+                                
+                                // Akumulasikan nilai warna dan alfa dari setiap sub-piksel
+                                totalR += pixels[index];
+                                totalG += pixels[index + 1];
+                                totalB += pixels[index + 2];
+                                totalA += pixels[index + 3];
+                                count++; // Tambah hitungan sub-piksel
+                            }
+                        }
+
+                        // Hitung rata-rata warna untuk piksel target
+                        const avgR = Math.round(totalR / count);
+                        const avgG = Math.round(totalG / count);
+                        const avgB = Math.round(totalB / count);
+                        const avgA = Math.round(totalA / count);
+
+                        // Atur warna piksel di kanvas utama dengan warna rata-rata
+                        // Pembagian avgA dengan 255 mengubah nilai alfa dari 0-255 menjadi 0.0-1.0
+                        drawPixel(x, y, `rgba(${avgR},${avgG},${avgB},${avgA / 255})`);
+                    }
+                }
+            }
+
+            /**
+             * Fungsi utama untuk menggambar garis dengan opsi aliased dan anti-aliased
+             * berdasarkan pilihan pengguna dari UI.
+             */
+            function drawAliasedAndAntiAliased() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan seluruh canvas sebelum menggambar
+
+                // Mendapatkan nilai koordinat garis dari input
+                const x1 = parseFloat(document.getElementById('lineX1').value);
+                const y1 = parseFloat(document.getElementById('lineY1').value);
+                const x2 = parseFloat(document.getElementById('lineX2').value);
+                const y2 = parseFloat(document.getElementById('lineY2').value);
+                // Mendapatkan faktor super-sampling N
+                const N = parseInt(document.getElementById('superSamplingFactor').value);
+                // Mendapatkan status checkbox "Tampilkan Piksel Mentah"
+                const showRaw = document.getElementById('showRawPixels').checked;
+
+                if (showRaw) {
+                    // Jika "Tampilkan Piksel Mentah" dicentang, gambar garis aliased sebagai referensi
+                    
+                    // Gambar garis putus-putus sebagai panduan lokasi garis ideal
+                    ctx.strokeStyle = "darkgray"; // Warna abu-abu gelap
+                    ctx.lineWidth = 1; // Ketebalan 1 piksel
+                    ctx.setLineDash([5, 5]); // Mengatur gaya garis putus-putus (5px garis, 5px spasi)
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Mengatur ulang gaya garis ke solid untuk gambar berikutnya
+
+                    // Gambar setiap piksel yang akan diaktifkan oleh garis aliased (biru)
+                    drawLineAliased(x1, y1, x2, y2, "rgba(0,0,255,0.8)"); // Warna biru dengan sedikit transparansi
+                }
+                
+                // Gambar garis dengan anti-aliasing menggunakan super-sampling
+                // Warna garis anti-aliased adalah hitam solid
+                drawLineAntiAliased(x1, y1, x2, y2, N, "black"); 
+            }
+
+            /**
+             * Mengatur ulang semua nilai input di UI ke nilai defaultnya
+             * dan kemudian memicu penggambaran ulang canvas.
+             */
+            function resetValues() {
+                // Mengatur ulang nilai koordinat garis
+                document.getElementById('lineX1').value = 50;
+                document.getElementById('lineY1').value = 100;
+                document.getElementById('lineX2').value = 400;
+                document.getElementById('lineY2').value = 250;
+                // Mengatur ulang faktor super-sampling ke 2
+                document.getElementById('superSamplingFactor').value = 2;
+                // Mengatur ulang checkbox "Tampilkan Piksel Mentah" menjadi tidak dicentang
+                document.getElementById('showRawPixels').checked = false;
+                
+                // Panggil fungsi gambar untuk memperbarui tampilan sesuai nilai reset
+                drawAliasedAndAntiAliased();
+            }
+
+            // Memanggil fungsi resetValues() saat halaman dimuat pertama kali.
+            // Ini akan memastikan tampilan awal sudah terisi dengan contoh garis
+            // yang di-anti-aliased.
+            document.addEventListener('DOMContentLoaded', resetValues);
+        </script>
+    </div>
+</body>
+</html>

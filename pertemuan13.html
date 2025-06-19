@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>WebGL Segitiga Sederhana</title>
+    <style>
+        /* Gaya dasar untuk body */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(to right, #e6f2ff, #f0f8ff);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Gaya untuk judul utama */
+        h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8em;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Gaya untuk elemen canvas WebGL */
+        canvas {
+            display: block;
+            margin: 25px auto;
+            border: 2px solid #2c3e50;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+
+        /* Gaya untuk bagian penjelasan */
+        .penjelasan-bawah {
+            margin-top: 30px;
+            background: #ffffff;
+            padding: 25px;
+            border: 1px solid #dcdcdc;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+        .penjelasan-bawah strong {
+            color: #2c3e50;
+        }
+        .penjelasan-bawah ol, .penjelasan-bawah ul {
+            margin-top: 15px;
+            margin-left: 25px;
+            line-height: 1.7;
+        }
+        .penjelasan-bawah pre {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            overflow-x: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>WebGL Segitiga Sederhana</h2>
+
+    <canvas id="glCanvas" width="600" height="400"></canvas>
+
+    <div class="penjelasan-bawah">
+        <strong>Penjelasan Program WebGL:</strong><br><br>
+        WebGL (Web Graphics Library) adalah API JavaScript untuk merender grafis 3D interaktif dalam browser web. Berbeda dengan HTML Canvas 2D API yang Anda gunakan sebelumnya, WebGL berinteraksi langsung dengan **GPU (Graphics Processing Unit)** komputer Anda. Ini berarti Anda menulis program kecil yang berjalan di GPU, yang disebut **shaders**, menggunakan bahasa pemrograman bernama **GLSL (OpenGL Shading Language)**.
+
+        Pipeline dasar WebGL untuk menggambar:
+        <ol>
+            <li><strong>Inisialisasi Konteks WebGL:</strong> Mendapatkan objek `WebGLRenderingContext` dari elemen `<canvas>`.</li>
+            <li><strong>Definisi Geometri:</strong> Menentukan verteks (titik-titik) objek Anda dalam ruang 3D. Data ini disimpan dalam **Buffer Objek Verteks (VBO)** di GPU.</li>
+            <li><strong>Penulisan Shader:</strong>
+                <ul>
+                    <li><strong>Vertex Shader:</strong> Memproses setiap verteks. Tugas utamanya adalah mengubah koordinat 3D verteks ke koordinat klip (sesuai untuk proyeksi) dan dapat meneruskan data lain (seperti warna) ke fragment shader.</li>
+                    <li><strong>Fragment Shader:</strong> Memproses setiap "fragmen" (piksel potensial) yang dihasilkan dari geometri yang di-rasterisasi. Tugas utamanya adalah menentukan warna akhir piksel.</li>
+                </ul>
+            </li>
+            <li><strong>Kompilasi dan Pengaitan Shader:</strong> Mengompilasi kode GLSL dan mengaitkannya ke dalam **Program Shader**.</li>
+            <li><strong>Pengaturan Atribut Verteks:</strong> Memberi tahu WebGL bagaimana menafsirkan data dalam VBO (misalnya, di mana menemukan posisi X, Y, Z, dan di mana menemukan komponen warna R, G, B).</li>
+            <li><strong>Matriks Transformasi (Opsional untuk contoh ini, tapi penting untuk 3D):</strong> Mengatur matriks Model, View, dan Proyeksi untuk memposisikan objek, kamera, dan mengatur perspektif. (Contoh ini menyederhanakannya untuk segitiga 2D).</li>
+            <li><strong>Menggambar (Draw Call):</strong> Memberi tahu WebGL untuk menggambar geometri menggunakan program shader yang telah diatur.</li>
+        </ol>
+        Contoh di atas adalah program WebGL paling sederhana yang akan menggambar segitiga dengan warna yang bervariasi pada setiap verteksnya.
+    </div>
+
+    <script>
+        // Mendapatkan elemen canvas dari DOM
+        const canvas = document.getElementById('glCanvas');
+        // Mendapatkan konteks WebGL dari canvas.
+        // Jika browser tidak mendukung WebGL, akan mengembalikan null.
+        const gl = canvas.getContext('webgl');
+
+        // --- 1. Inisialisasi Konteks WebGL ---
+        if (!gl) {
+            console.error('Browser Anda tidak mendukung WebGL.');
+            alert('Browser Anda tidak mendukung WebGL. Silakan coba browser lain atau perbarui.');
+            // Keluar jika WebGL tidak tersedia
+            throw new Error('WebGL not supported');
+        }
+
+        // Mengatur warna latar belakang (clear color) WebGL (RGBA)
+        gl.clearColor(0.95, 0.98, 1.0, 1.0); // Biru muda sangat terang
+        // Membersihkan buffer warna dengan warna latar belakang yang telah ditentukan
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // --- 2. Definisi Geometri (Verteks dan Warna) ---
+        // Data verteks untuk segitiga. Setiap verteks memiliki:
+        // [Posisi X, Posisi Y, Warna R, Warna G, Warna B]
+        const vertices = new Float32Array([
+            // Segitiga 1 (merah, hijau, biru)
+             0.0,  0.5,  1.0, 0.0, 0.0, // Verteks atas (Merah)
+            -0.5, -0.5,  0.0, 1.0, 0.0, // Verteks kiri bawah (Hijau)
+             0.5, -0.5,  0.0, 0.0, 1.0  // Verteks kanan bawah (Biru)
+        ]);
+
+        // Membuat Buffer Objek Verteks (VBO) di GPU
+        const vertexBuffer = gl.createBuffer();
+        // Mengikat (bind) VBO ini sebagai buffer array aktif
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        // Mengisi VBO dengan data verteks. STATIC_DRAW berarti data tidak akan sering berubah.
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        // --- 3. Penulisan Shader (GLSL) ---
+
+        // Kode GLSL untuk Vertex Shader
+        const vsSource = `
+            attribute vec2 a_position; // Atribut untuk posisi verteks (2D)
+            attribute vec3 a_color;    // Atribut untuk warna verteks (RGB)
+            varying vec3 v_color;      // Variabel 'varying' untuk meneruskan warna ke fragment shader
+
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0); // Mengatur posisi akhir verteks. Z=0, W=1 (untuk 2D).
+                v_color = a_color;                         // Meneruskan warna dari atribut ke varying
+            }
+        `;
+
+        // Kode GLSL untuk Fragment Shader
+        const fsSource = `
+            precision mediump float; // Mengatur presisi float (standar untuk WebGL)
+            varying vec3 v_color;    // Menerima warna yang diinterpolasi dari vertex shader
+
+            void main() {
+                gl_FragColor = vec4(v_color, 1.0); // Mengatur warna akhir piksel (RGB, Alpha=1.0)
+            }
+        `;
+
+        // --- 4. Kompilasi dan Pengaitan Shader ---
+
+        /**
+         * Fungsi helper untuk membuat dan mengompilasi shader.
+         * @param {WebGLRenderingContext} gl - Konteks WebGL.
+         * @param {number} type - Jenis shader (gl.VERTEX_SHADER atau gl.FRAGMENT_SHADER).
+         * @param {string} source - Kode sumber GLSL.
+         * @returns {WebGLShader} Shader yang sudah dikompilasi.
+         */
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type); // Membuat objek shader
+            gl.shaderSource(shader, source);      // Mengaitkan kode sumber GLSL ke shader
+            gl.compileShader(shader);             // Mengompilasi shader
+
+            // Memeriksa apakah kompilasi berhasil
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Gagal mengompilasi shader:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);     // Kompilasi vertex shader
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource); // Kompilasi fragment shader
+
+        // Membuat Program Shader (menggabungkan vertex dan fragment shader)
+        const shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);   // Mengaitkan vertex shader
+        gl.attachShader(shaderProgram, fragmentShader); // Mengaitkan fragment shader
+        gl.linkProgram(shaderProgram);                  // Menghubungkan (link) program shader
+
+        // Memeriksa apakah program shader berhasil di-link
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            console.error('Gagal melink program shader:', gl.getProgramInfoLog(shaderProgram));
+            gl.deleteProgram(shaderProgram);
+            throw new Error('Shader program linking failed');
+        }
+
+        // Menggunakan program shader yang baru dibuat
+        gl.useProgram(shaderProgram);
+
+        // --- 5. Pengaturan Atribut Verteks ---
+
+        // Mendapatkan lokasi atribut 'a_position' dari vertex shader
+        const positionAttributeLocation = gl.getAttribLocation(shaderProgram, 'a_position');
+        // Mendapatkan lokasi atribut 'a_color' dari vertex shader
+        const colorAttributeLocation = gl.getAttribLocation(shaderProgram, 'a_color');
+
+        const FSIZE = vertices.BYTES_PER_ELEMENT; // Ukuran satu elemen float dalam byte (4 byte)
+        const STRIDE = (2 + 3) * FSIZE;           // Jarak antara awal satu verteks ke awal verteks berikutnya (Posisi XY + Warna RGB = 5 float)
+
+        // Mengatur atribut posisi
+        gl.vertexAttribPointer(
+            positionAttributeLocation, // Lokasi atribut
+            2,                         // Ukuran komponen (vec2 = 2 float: X, Y)
+            gl.FLOAT,                  // Tipe data (float)
+            false,                     // Normalisasi (tidak dinormalisasi)
+            STRIDE,                    // Stride (jarak antar verteks)
+            0                          // Offset (mulai dari awal verteks)
+        );
+        gl.enableVertexAttribArray(positionAttributeLocation); // Mengaktifkan atribut posisi
+
+        // Mengatur atribut warna
+        gl.vertexAttribPointer(
+            colorAttributeLocation,    // Lokasi atribut
+            3,                         // Ukuran komponen (vec3 = 3 float: R, G, B)
+            gl.FLOAT,                  // Tipe data (float)
+            false,                     // Normalisasi (tidak dinormalisasi)
+            STRIDE,                    // Stride (jarak antar verteks)
+            2 * FSIZE                  // Offset (mulai setelah 2 float posisi X,Y)
+        );
+        gl.enableVertexAttribArray(colorAttributeLocation); // Mengaktifkan atribut warna
+
+        // --- 6. Matriks Transformasi (Disederhanakan untuk 2D) ---
+        // Dalam contoh sederhana ini, kita menggambar di ruang klip (clip space)
+        // dari -1.0 hingga +1.0, jadi tidak perlu matriks proyeksi terpisah.
+
+        // --- 7. Menggambar (Draw Call) ---
+        // Menggambar primitif (GL_TRIANGLES) dari data buffer
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 5); // Mulai dari indeks 0, gambar (vertices.length / 5) verteks (3 verteks total)
+    </script>
+</body>
+</html>

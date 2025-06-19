@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Aplikasi Grafika Komputer Sederhana</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .main-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+        .controls-panel {
+            flex: 1;
+            max-width: 300px;
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 2px solid #000;
+            background: #fff;
+            cursor: crosshair;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        .input-group:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"], input[type="color"] {
+            width: calc(50% - 10px);
+            padding: 6px;
+            margin-right: 5px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="number"].full-width {
+            width: calc(100% - 12px);
+        }
+        button {
+            padding: 8px 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .output-panel {
+            flex: 1;
+            max-width: 400px;
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            overflow-y: auto; /* Untuk tabel yang mungkin panjang */
+            max-height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .explanation {
+            width: 100%;
+            max-width: 1200px;
+            background: #f0f8ff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aplikasi Grafika Komputer Sederhana</h1>
+
+    <div class="main-container">
+        <div class="controls-panel">
+            <h3>Pengaturan Objek</h3>
+            <div class="input-group">
+                <label for="shapeType">Pilih Bentuk:</label>
+                <select id="shapeType" onchange="resetObjectInputs()">
+                    <option value="line">Garis</option>
+                    <option value="rectangle">Persegi Panjang</option>
+                </select>
+                <label>X1 / Objek X: <input type="number" id="x1" value="100"></label>
+                <label>Y1 / Objek Y: <input type="number" id="y1" value="100"></label><br>
+                <label id="x2Label">X2 / Lebar: <input type="number" id="x2" value="200"></label>
+                <label id="y2Label">Y2 / Tinggi: <input type="number" id="y2" value="150"></label><br>
+                <label>Warna: <input type="color" id="objectColor" value="#3498db"></label>
+                <button onclick="createObject()">Tambah Objek</button>
+                <button class="danger" onclick="clearCanvas()">Hapus Semua</button>
+            </div>
+
+            <h3>Transformasi Objek</h3>
+            <div class="input-group">
+                <label for="selectedObject">Pilih Objek untuk Transformasi:</label>
+                <select id="selectedObject" onchange="updateTransformationControls()"></select>
+            </div>
+
+            <div class="input-group">
+                <h4>Translasi (Geser)</h4>
+                <label>ΔX: <input type="number" id="transX" value="0"></label>
+                <label>ΔY: <input type="number" id="transY" value="0"></label><br>
+                <button onclick="applyTransformation('translate')">Terapkan Translasi</button>
+            </div>
+
+            <div class="input-group">
+                <h4>Rotasi</h4>
+                <label>Sudut (°): <input type="number" id="rotAngle" value="0" step="1"></label><br>
+                <label>Pusat Rotasi X: <input type="number" id="rotCx" value="0" class="full-width"></label>
+                <label>Pusat Rotasi Y: <input type="number" id="rotCy" value="0" class="full-width"></label><br>
+                <button onclick="applyTransformation('rotate')">Terapkan Rotasi</button>
+            </div>
+
+            <div class="input-group">
+                <h4>Skala (Dilatasi)</h4>
+                <label>Faktor Skala: <input type="number" id="scaleFactor" value="1.0" step="0.1"></label><br>
+                <label>Pusat Skala X: <input type="number" id="scaleCx" value="0" class="full-width"></label>
+                <label>Pusat Skala Y: <input type="number" id="scaleCy" value="0" class="full-width"></label><br>
+                <button onclick="applyTransformation('scale')">Terapkan Skala</button>
+            </div>
+            <button class="danger" onclick="deleteSelectedObject()">Hapus Objek Terpilih</button>
+        </div>
+
+        <canvas id="mainCanvas" width="600" height="400"></canvas>
+
+        <div class="output-panel">
+            <h3>Detail Objek Terpilih</h3>
+            <p>ID Objek: <span id="currentObjectId">Tidak ada</span></p>
+            <p>Tipe: <span id="currentObjectType">Tidak ada</span></p>
+            <p>Warna: <span id="currentObjectColor">Tidak ada</span></p>
+            <h4>Koordinat Titik Objek</h4>
+            <table id="objectPointsTable">
+                <thead><tr><th>#</th><th>X</th><th>Y</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <strong>Penjelasan Aplikasi Grafika Komputer:</strong><br><br>
+        Aplikasi ini mengintegrasikan berbagai algoritma grafika komputer 2D yang telah kita pelajari sebelumnya. Tujuannya adalah untuk menunjukkan bagaimana berbagai transformasi dan penggambaran objek dapat diatur dan diterapkan secara interaktif.
+
+        <ol>
+            <li><strong>Manajemen Objek:</strong>
+                <ul>
+                    <li>Setiap objek (garis atau persegi panjang) disimpan sebagai kumpulan titik-titik dan properti seperti warna dan tipe.</li>
+                    <li>Objek yang ditambahkan akan muncul di daftar pilihan dan bisa dipilih untuk manipulasi lebih lanjut.</li>
+                </ul>
+            </li>
+            <li><strong>Penggambaran Objek:</strong>
+                <ul>
+                    <li>Fungsi `drawAllObjects()` akan mengiterasi melalui semua objek yang ada dan menggambarnya di kanvas. Ini memastikan setiap perubahan visual diterapkan.</li>
+                    <li>Kami menggunakan `ctx.clearRect()` sebelum setiap penggambaran ulang untuk "menghapus" bingkai sebelumnya.</li>
+                </ul>
+            </li>
+            <li><strong>Transformasi (Translasi, Rotasi, Skala):</strong>
+                <ul>
+                    <li>Saat Anda menerapkan transformasi, aplikasi akan mengambil titik-titik objek yang terpilih dan menerapkan rumus transformasi yang sesuai pada setiap titik.</li>
+                    <li>Untuk rotasi dan skala di sekitar pusat arbitrer, objek digeser ke titik asal, transformasi diterapkan, dan kemudian digeser kembali.</li>
+                </ul>
+            </li>
+            <li><strong>Interaksi Pengguna:</strong>
+                <ul>
+                    <li>Pengguna dapat menambahkan objek baru, memilih objek yang ada, dan melihat koordinatnya.</li>
+                    <li>Input angka dan tombol memungkinkan kontrol yang tepat atas setiap transformasi.</li>
+                </ul>
+            <li><strong>API Grafis dan Pengolahan Citra Digital (Konsep Terintegrasi):</strong>
+                <ul>
+                    <li>Aplikasi ini secara intrinsik menggunakan **Canvas 2D API** (`getContext('2d')`, `beginPath()`, `moveTo()`, `lineTo()`, `stroke()`, `fill()`, dll.) sebagai API grafis dasar untuk menggambar piksel dan bentuk. Ini adalah fondasi dari semua visualisasi.</li>
+                    <li>Meskipun tidak ada filter pengolahan citra eksplisit (seperti *grayscale* atau *blur*) yang diterapkan pada objek yang digambar, konsep *rendering* objek ke piksel kanvas dan mengelola data piksel secara internal adalah bagian dari lingkup Pengolahan Citra Digital.</li>
+                    <li>**Clipping:** Garis atau bagian objek yang melewati batas kanvas akan secara otomatis "terpotong" oleh *viewport* kanvas. Ini adalah bentuk *clipping* implisit yang ditangani oleh API.</li>
+                    <li>**Anti-aliasing:** Penggambaran garis dan bentuk di Canvas API seringkali memiliki bentuk *anti-aliasing* bawaan (tergantung implementasi *browser*), yang membuat tepi terlihat lebih halus daripada piksel *jagged* yang kita bahas sebelumnya.</li>
+                </ul>
+            </li>
+        </ol>
+        Aplikasi ini berfungsi sebagai platform untuk bereksperimen dengan bagaimana berbagai konsep grafika komputer bekerja secara harmonis untuk menciptakan visual interaktif.
+    </div>
+
+    <script>
+        const canvas = document.getElementById("mainCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let objects = []; // Array untuk menyimpan semua objek yang digambar
+        let nextObjectId = 0; // ID unik untuk setiap objek
+        let selectedObjectId = null; // ID objek yang sedang dipilih
+
+        const objectPointsTableBody = document.querySelector("#objectPointsTable tbody");
+        const selectedObjectDropdown = document.getElementById("selectedObject");
+
+        /**
+         * Menggambar sebuah titik pada kanvas.
+         * @param {number} x - Koordinat X titik.
+         * @param {number} y - Koordinat Y titik.
+         * @param {string} color - Warna titik.
+         * @param {number} radius - Radius titik.
+         */
+        function drawPoint(x, y, color = 'red', radius = 3) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        /**
+         * Menggambar sebuah poligon dari kumpulan titik-titiknya.
+         * @param {Array<Object>} points - Array objek titik {x, y} yang membentuk objek.
+         * @param {string} strokeColor - Warna garis objek.
+         * @param {string} fillColor - Warna isian objek (opsional, default 'transparent').
+         */
+        function drawShape(points, strokeColor = 'blue', fillColor = 'transparent') {
+            if (points.length === 0) return;
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath(); // Tutup jalur untuk membentuk poligon
+
+            if (fillColor !== 'transparent') {
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+            }
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Gambar titik-titik sudut
+            points.forEach(p => drawPoint(p.x, p.y, 'red', 4));
+        }
+
+        /**
+         * Menggambar garis pada kanvas.
+         * @param {Object} p1 - Titik awal {x, y}.
+         * @param {Object} p2 - Titik akhir {x, y}.
+         * @param {string} color - Warna garis.
+         */
+        function drawLine(p1, p2, color = 'blue') {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            drawPoint(p1.x, p1.y, 'red', 4);
+            drawPoint(p2.x, p2.y, 'red', 4);
+        }
+
+        /**
+         * Menggambar semua objek yang ada di array 'objects'.
+         */
+        function drawAllObjects() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan seluruh kanvas
+
+            objects.forEach(obj => {
+                let strokeColor = obj.color;
+                // Highlight objek yang dipilih
+                if (obj.id === selectedObjectId) {
+                    strokeColor = 'red';
+                }
+
+                if (obj.type === 'line') {
+                    drawLine(obj.points[0], obj.points[1], strokeColor);
+                } else if (obj.type === 'rectangle') {
+                    drawShape(obj.points, strokeColor);
+                }
+            });
+        }
+
+        /**
+         * Membuat objek baru (garis atau persegi panjang) dan menambahkannya ke daftar.
+         */
+        function createObject() {
+            const type = document.getElementById('shapeType').value;
+            const x1 = parseFloat(document.getElementById('x1').value);
+            const y1 = parseFloat(document.getElementById('y1').value);
+            const x2 = parseFloat(document.getElementById('x2').value); // Bisa X2 atau lebar
+            const y2 = parseFloat(document.getElementById('y2').value); // Bisa Y2 atau tinggi
+            const color = document.getElementById('objectColor').value;
+
+            let newObject = {
+                id: nextObjectId++,
+                type: type,
+                color: color,
+                points: [], // Koordinat objek
+                originalParams: { x1, y1, x2, y2 } // Untuk reset transformasi di masa depan jika perlu
+            };
+
+            if (type === 'line') {
+                newObject.points = [{ x: x1, y: y1 }, { x: x2, y: y2 }];
+            } else if (type === 'rectangle') {
+                const width = x2 - x1; // Jika x2 adalah koordinat
+                const height = y2 - y1; // Jika y2 adalah koordinat
+                if (width < 0 || height < 0) {
+                     alert("Untuk persegi panjang, X2 harus lebih besar dari X1 dan Y2 lebih besar dari Y1.");
+                     return;
+                }
+                newObject.points = [
+                    { x: x1, y: y1 },
+                    { x: x2, y: y1 },
+                    { x: x2, y: y2 },
+                    { x: x1, y: y2 }
+                ];
+            }
+
+            objects.push(newObject);
+            updateObjectDropdown();
+            selectedObjectId = newObject.id; // Otomatis pilih objek baru
+            updateTransformationControls();
+            drawAllObjects();
+        }
+
+        /**
+         * Mengatur ulang input X2/Y2 menjadi lebar/tinggi jika memilih persegi panjang.
+         */
+        function resetObjectInputs() {
+            const shapeType = document.getElementById('shapeType').value;
+            if (shapeType === 'line') {
+                document.getElementById('x2Label').textContent = "X2:";
+                document.getElementById('y2Label').textContent = "Y2:";
+                document.getElementById('x2').value = 200;
+                document.getElementById('y2').value = 150;
+            } else { // rectangle
+                document.getElementById('x2Label').textContent = "Lebar:";
+                document.getElementById('y2Label').textContent = "Tinggi:";
+                document.getElementById('x2').value = 80;
+                document.getElementById('y2').value = 60;
+            }
+        }
+
+
+        /**
+         * Mengosongkan kanvas dan menghapus semua objek.
+         */
+        function clearCanvas() {
+            objects = [];
+            selectedObjectId = null;
+            updateObjectDropdown();
+            updateTransformationControls();
+            drawAllObjects();
+        }
+
+        /**
+         * Memperbarui dropdown pilihan objek dan memilih objek yang saat ini terpilih.
+         */
+        function updateObjectDropdown() {
+            selectedObjectDropdown.innerHTML = '';
+            if (objects.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Tidak ada objek';
+                selectedObjectDropdown.appendChild(option);
+                selectedObjectDropdown.disabled = true;
+            } else {
+                selectedObjectDropdown.disabled = false;
+                objects.forEach(obj => {
+                    const option = document.createElement('option');
+                    option.value = obj.id;
+                    option.textContent = `${obj.type} #${obj.id}`;
+                    selectedObjectDropdown.appendChild(option);
+                });
+                // Pilih objek yang saat ini dipilih
+                selectedObjectDropdown.value = selectedObjectId;
+            }
+        }
+
+        /**
+         * Memperbarui detail objek di panel output dan input transformasi
+         * saat objek dipilih dari dropdown.
+         */
+        function updateTransformationControls() {
+            selectedObjectId = parseInt(selectedObjectDropdown.value);
+            const selectedObject = objects.find(obj => obj.id === selectedObjectId);
+
+            if (selectedObject) {
+                document.getElementById('currentObjectId').textContent = selectedObject.id;
+                document.getElementById('currentObjectType').textContent = selectedObject.type;
+                document.getElementById('currentObjectColor').textContent = selectedObject.color;
+
+                // Update tabel koordinat
+                objectPointsTableBody.innerHTML = '';
+                selectedObject.points.forEach((p, index) => {
+                    const row = objectPointsTableBody.insertRow();
+                    row.insertCell().textContent = index;
+                    row.insertCell().textContent = p.x.toFixed(2);
+                    row.insertCell().textContent = p.y.toFixed(2);
+                });
+
+                // Reset nilai transformasi input ke 0 (kecuali skala ke 1)
+                document.getElementById('transX').value = 0;
+                document.getElementById('transY').value = 0;
+                document.getElementById('rotAngle').value = 0;
+                document.getElementById('scaleFactor').value = 1.0;
+
+                // Set pusat rotasi/skala default (misal titik awal objek)
+                if (selectedObject.points.length > 0) {
+                    document.getElementById('rotCx').value = selectedObject.points[0].x.toFixed(0);
+                    document.getElementById('rotCy').value = selectedObject.points[0].y.toFixed(0);
+                    document.getElementById('scaleCx').value = selectedObject.points[0].x.toFixed(0);
+                    document.getElementById('scaleCy').value = selectedObject.points[0].y.toFixed(0);
+                }
+
+            } else {
+                document.getElementById('currentObjectId').textContent = "Tidak ada";
+                document.getElementById('currentObjectType').textContent = "Tidak ada";
+                document.getElementById('currentObjectColor').textContent = "Tidak ada";
+                objectPointsTableBody.innerHTML = '';
+            }
+            drawAllObjects(); // Gambar ulang untuk highlight objek terpilih
+        }
+
+        /**
+         * Menerapkan transformasi yang dipilih pada objek yang sedang dipilih.
+         * @param {string} transformType - Jenis transformasi ('translate', 'rotate', 'scale').
+         */
+        function applyTransformation(transformType) {
+            const selectedObject = objects.find(obj => obj.id === selectedObjectId);
+
+            if (!selectedObject) {
+                alert("Pilih objek terlebih dahulu untuk menerapkan transformasi.");
+                return;
+            }
+
+            let newPoints = [];
+            selectedObject.points.forEach(p => {
+                let transformedP = { x: p.x, y: p.y };
+
+                switch (transformType) {
+                    case 'translate':
+                        const deltaX = parseFloat(document.getElementById('transX').value);
+                        const deltaY = parseFloat(document.getElementById('transY').value);
+                        transformedP.x += deltaX;
+                        transformedP.y += deltaY;
+                        break;
+                    case 'rotate':
+                        const angleDeg = parseFloat(document.getElementById('rotAngle').value);
+                        const angleRad = angleDeg * Math.PI / 180;
+                        const rotCx = parseFloat(document.getElementById('rotCx').value);
+                        const rotCy = parseFloat(document.getElementById('rotCy').value);
+
+                        // Geser ke asal
+                        const tempX = p.x - rotCx;
+                        const tempY = p.y - rotCy;
+
+                        // Rotasi
+                        const rotatedX = tempX * Math.cos(angleRad) - tempY * Math.sin(angleRad);
+                        const rotatedY = tempX * Math.sin(angleRad) + tempY * Math.cos(angleRad);
+
+                        // Geser kembali
+                        transformedP.x = rotatedX + rotCx;
+                        transformedP.y = rotatedY + rotCy;
+                        break;
+                    case 'scale':
+                        const scaleFactor = parseFloat(document.getElementById('scaleFactor').value);
+                        const scaleCx = parseFloat(document.getElementById('scaleCx').value);
+                        const scaleCy = parseFloat(document.getElementById('scaleCy').value);
+
+                        // Geser ke asal
+                        const tempSX = p.x - scaleCx;
+                        const tempSY = p.y - scaleCy;
+
+                        // Skala
+                        const scaledX = tempSX * scaleFactor;
+                        const scaledY = tempSY * scaleFactor;
+
+                        // Geser kembali
+                        transformedP.x = scaledX + scaleCx;
+                        transformedP.y = scaledY + scaleCy;
+                        break;
+                }
+                newPoints.push(transformedP);
+            });
+
+            selectedObject.points = newPoints; // Perbarui titik objek
+            drawAllObjects(); // Gambar ulang semua objek
+            updateTransformationControls(); // Perbarui tabel koordinat
+        }
+
+        /**
+         * Menghapus objek yang sedang dipilih dari daftar.
+         */
+        function deleteSelectedObject() {
+            if (selectedObjectId === null) {
+                alert("Pilih objek yang ingin dihapus.");
+                return;
+            }
+            objects = objects.filter(obj => obj.id !== selectedObjectId);
+            selectedObjectId = null; // Hapus pilihan
+            updateObjectDropdown();
+            updateTransformationControls(); // Bersihkan info objek
+            drawAllObjects(); // Gambar ulang
+        }
+
+        // Inisialisasi awal saat halaman dimuat
+        resetObjectInputs();
+        updateObjectDropdown();
+        drawAllObjects(); // Gambar kanvas kosong saat startup
+    </script>
+</body>
+</html>
